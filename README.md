@@ -2,6 +2,12 @@
 
 Open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds: accessibility data coverage, service metrics, proximity coverage, and equity diagnostics. The tool reports **data and standards conformance**; it does **not** determine legal accessibility compliance.
 
+## Open by design
+
+**We build in the open.** TransitX Labs Inc. publishes its tools, methods and learning materials under open licences, so public-interest teams can use them, check how they work and adapt them freely. Open work is easier to trust, because anyone can see exactly how a result is produced. Code is licensed under Apache-2.0.
+
+**Our own work, and only ours.** Everything in this repository was created by TransitX Labs Inc. from public data and synthetic examples. It contains no client data, no client projects, and no one else's confidential information or intellectual property.
+
 ## Quick start
 
 ```bash
@@ -15,9 +21,9 @@ transit-audit audit tests/fixtures/minimal_valid.zip \
 
 Outputs in `audit-output/`:
 
-- `results.json` — schema version 1.0 machine-readable audit
-- `report.html` — standalone accessible HTML report
-- `backlog.json` / `backlog.csv` — prioritized remediation backlog
+- `results.json`: schema version 1.0 machine-readable audit
+- `report.html`: standalone accessible HTML report
+- `backlog.json` / `backlog.csv`: prioritized remediation backlog
 
 ## CLI reference
 
@@ -62,4 +68,4 @@ python -m build
 
 ## Licence
 
-Apache-2.0 — see [LICENSE](LICENSE). Demonstration data licences in [DATA_LICENSES.md](DATA_LICENSES.md).
+Apache-2.0. See [LICENSE](LICENSE). Demonstration data licences in [DATA_LICENSES.md](DATA_LICENSES.md).
