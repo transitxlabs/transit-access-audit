@@ -1,0 +1,8 @@
+Derived audit outputs generated from synthetic fixtures in tests/fixtures/.
+No agency GTFS or Statistics Canada boundaries are redistributed in this folder.
+Regenerate with:
+
+transit-audit audit tests/fixtures/minimal_valid.zip \
+  --census tests/fixtures/census_tiny.gpkg \
+  --config examples/audit.yml \
+  --output-dir examples/demo/audit-output

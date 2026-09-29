@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transit Access Audit Report</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 0; color: #111; background: #fff; }
+    .skip { position: absolute; left: -9999px; }
+    .skip:focus,
+    .skip:focus-visible { left: 1rem; top: 1rem; background: #fff; padding: .5rem; z-index: 10; outline: 2px solid #005fcc; }
+    a:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; }
+    header, main, footer { max-width: 960px; margin: 0 auto; padding: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { border: 1px solid #444; padding: .5rem; text-align: left; vertical-align: top; }
+    th { background: #f2f2f2; }
+    caption { caption-side: top; font-weight: bold; text-align: left; margin-bottom: .5rem; }
+    .note { background: #f8f8f8; border-left: 4px solid #555; padding: .75rem; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header>
+    <p><strong>Transit Access Audit</strong> — version {{ result.tool.version | escape_text }}</p>
+  </header>
+  <main id="main">
+    <h1>Transit Access Audit Report</h1>
+    <nav aria-label="Report sections">
+      <ul>
+        <li><a href="#summary">Executive summary</a></li>
+        <li><a href="#findings">Findings</a></li>
+        <li><a href="#metrics">Metrics</a></li>
+        <li><a href="#backlog">Backlog</a></li>
+        <li><a href="#provenance">Provenance</a></li>
+      </ul>
+    </nav>
+
+    <section id="summary">
+      <h2>Executive summary</h2>
+      <p>
+        This report describes <strong>data coverage and standards-informed metrics</strong>.
+        It does not determine legal accessibility compliance.
+      </p>
+      <table>
+        <caption>Summary counts</caption>
+        <thead>
+          <tr><th scope="col">Measure</th><th scope="col">Count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Findings</td><td>{{ result.summary.finding_count }}</td></tr>
+          <tr><td>Errors</td><td>{{ result.summary.error_count }}</td></tr>
+          <tr><td>Warnings</td><td>{{ result.summary.warning_count }}</td></tr>
+          <tr><td>Metrics</td><td>{{ result.summary.metric_count }}</td></tr>
+          <tr><td>Backlog items</td><td>{{ result.summary.backlog_count }}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="findings">
+      <h2>Findings</h2>
+      <table>
+        <caption>Audit findings</caption>
+        <thead>
+          <tr>
+            <th scope="col">Check ID</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Message</th>
+            <th scope="col">Suggested action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for finding in result.findings %}
+          <tr>
+            <td>{{ finding.check_id | escape_text }}</td>
+            <td>{{ finding.severity.value | escape_text }}</td>
+            <td>{{ finding.message | escape_text }}</td>
+            <td>{{ (finding.suggested_action or '') | escape_text }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section id="metrics">
+      <h2>Metrics</h2>
+      <p class="note">
+        Proximity metrics report <strong>proximity coverage</strong>, not walk accessibility.
+        Population weighting uses areal intersection (uniform density assumption) unless configured otherwise.
+        Equity outputs are <strong>descriptive associations</strong> between group proximity shares;
+        they are not causal, not legal compliance, and not statutory limits.
+      </p>
+      {% if result.provenance.extra.get('data_attributions') %}
+      <h3>Data attributions</h3>
+      <ul>
+        {% for attr in result.provenance.extra.get('data_attributions', []) %}
+        <li><strong>{{ attr.get('publisher', '') | escape_text }}</strong>: {{ attr.get('text', '') | escape_text }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <table>
+        <caption>Computed metrics</caption>
+        <thead>
+          <tr>
+            <th scope="col">Metric ID</th>
+            <th scope="col">Label</th>
+            <th scope="col">Value</th>
+            <th scope="col">Numerator</th>
+            <th scope="col">Denominator</th>
+            <th scope="col">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for metric in result.metrics %}
+          <tr>
+            <td>{{ metric.metric_id | escape_text }}</td>
+            <td>{{ metric.label | escape_text }}</td>
+            <td>{{ metric.value | escape_text }}</td>
+            <td>{{ metric.numerator | escape_text }}</td>
+            <td>{{ metric.denominator | escape_text }}</td>
+            <td>
+              {% if metric.source_url | safe_url %}
+              <a href="{{ metric.source_url | safe_url }}">{{ metric.source_url | escape_text }}</a>
+              {% else %}
+              —
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section id="backlog">
+      <h2>Prioritized backlog</h2>
+      <p>Priority = (severity weight × impact) ÷ effort.</p>
+      <table>
+        <caption>Remediation backlog</caption>
+        <thead>
+          <tr>
+            <th scope="col">Priority</th>
+            <th scope="col">Check ID</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Impact</th>
+            <th scope="col">Effort</th>
+            <th scope="col">Title</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in result.backlog %}
+          <tr>
+            <td>{{ item.priority }}</td>
+            <td>{{ item.check_id | escape_text }}</td>
+            <td>{{ item.severity.value | escape_text }}</td>
+            <td>{{ item.impact }}</td>
+            <td>{{ item.effort }}</td>
+            <td>{{ item.title | escape_text }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section id="provenance">
+      <h2>Provenance</h2>
+      <table>
+        <caption>Input provenance</caption>
+        <thead>
+          <tr><th scope="col">Field</th><th scope="col">Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Executed at</td><td>{{ result.provenance.executed_at | escape_text }}</td></tr>
+          <tr><td>Feed SHA-256</td><td>{{ result.provenance.feed_sha256 | escape_text }}</td></tr>
+          <tr><td>Config SHA-256</td><td>{{ result.provenance.config_sha256 | escape_text }}</td></tr>
+          <tr><td>Census SHA-256</td><td>{{ result.provenance.census_sha256 | escape_text }}</td></tr>
+          <tr><td>CRS EPSG</td><td>{{ result.provenance.crs_epsg | escape_text }}</td></tr>
+          <tr><td>Validator</td><td>{{ result.provenance.validator_name | escape_text }} {{ result.provenance.validator_version | escape_text }}</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <footer>
+    <p>Open-source tool by TransitX Labs Inc. Reports data and standards conformance; not legal compliance.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[geo,dev]"
+          python scripts/build_fixtures.py
+      - name: Ruff
+        run: ruff check src tests
+      - name: Mypy
+        run: mypy src
+      - name: Pyright
+        run: pyright src
+      - name: Pytest
+        run: pytest
+      - name: Build wheel
+        run: python -m build
+      - name: Install wheel smoke test
+        run: |
+          pip install dist/transit_access_audit-*.whl
+          transit-audit --version

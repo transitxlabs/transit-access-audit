@@ -1,0 +1,10 @@
+{
+  "version": "6.0.0",
+  "notices": [
+    {
+      "code": "foreign_key_referential_integrity",
+      "severity": "ERROR",
+      "summary": "Trip references a route_id that does not exist"
+    }
+  ]
+}

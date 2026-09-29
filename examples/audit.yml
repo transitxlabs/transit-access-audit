@@ -1,0 +1,24 @@
+proximity_thresholds_m: [400, 500, 800]
+default_proximity_m: 500
+enabled_checks:
+  - GTFS.*
+  - ACCESS.*
+  - SERVICE.*
+  - PROXIMITY.*
+  - EQUITY.*
+  - FLEX.*
+service_bands:
+  - name: peak
+    start_time: "07:00:00"
+    end_time: "09:00:00"
+    reference_stop_id: S1
+equity_groups:
+  - name: reference
+    attribute: group_code
+    value: ref
+    reference: true
+  - name: low_income_proxy
+    attribute: group_code
+    value: low
+flex_exclude_from_fixed_route: true
+severity_fail_threshold: error

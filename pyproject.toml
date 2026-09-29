@@ -1,0 +1,113 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "transit-access-audit"
+version = "0.1.0"
+description = "Canadian GTFS transit data audit and decision-support toolkit"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [{ name = "TransitX Labs Inc." }]
+keywords = ["gtfs", "transit", "accessibility", "equity", "canada"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "pyyaml>=6.0",
+    "pandas>=2.2.0",
+    "jinja2>=3.1.0",
+    "importlib-metadata>=6.0; python_version < '3.12'",
+]
+
+[project.optional-dependencies]
+geo = [
+    "geopandas>=0.14.0",
+    "pyogrio>=0.7.0",
+    "shapely>=2.0.0",
+    "pyproj>=3.6.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "mypy>=1.10.0",
+    "pyright>=1.1.370",
+    "ruff>=0.4.0",
+    "types-PyYAML>=6.0.0",
+    "types-Jinja2>=2.11.0",
+    "pandas-stubs>=2.2.0",
+    "types-shapely>=2.0.0",
+    "build>=1.2.0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+]
+
+[project.scripts]
+transit-audit = "transit_audit.cli.app:app"
+
+[project.urls]
+Homepage = "https://github.com/transitxlabs/transit-access-audit"
+Documentation = "https://github.com/transitxlabs/transit-access-audit#readme"
+Repository = "https://github.com/transitxlabs/transit-access-audit"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/transit_audit"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/transit_audit", "tests", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=transit_audit --cov-report=term-missing --cov-fail-under=90"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["transit_audit"]
+branch = true
+omit = ["*/cli/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["transit_audit"]
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["geopandas.*", "pyogrio.*"]
+ignore_missing_imports = true
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

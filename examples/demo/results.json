@@ -1,0 +1,216 @@
+{
+  "backlog": [],
+  "findings": [
+    {
+      "check_id": "ACCESS.PATHWAY.PRESENCE",
+      "evidence": {
+        "station_ids": [
+          "STN1"
+        ]
+      },
+      "message": "Some stations lack pathway records.",
+      "severity": "info",
+      "suggested_action": "Add pathways.txt entries for station connectivity."
+    }
+  ],
+  "input": {
+    "census_path": "tests/fixtures/census_tiny.gpkg",
+    "config_path": "examples/audit.yml",
+    "feed_path": "tests/fixtures/minimal_valid.zip"
+  },
+  "metrics": [
+    {
+      "denominator": null,
+      "label": "Active calendar services",
+      "metadata": {
+        "latest_end_date": "20241231"
+      },
+      "metric_id": "GTFS.CALENDAR.COVERAGE",
+      "numerator": null,
+      "source_url": "https://gtfs.org/documentation/schedule/schedule-best-practices/",
+      "unit": null,
+      "value": 1
+    },
+    {
+      "denominator": 6,
+      "label": "Stops with known wheelchair_boarding",
+      "metadata": {
+        "breakdown": {
+          "accessible": 6
+        }
+      },
+      "metric_id": "ACCESS.STOP.WHEELCHAIR.KNOWN",
+      "numerator": 6,
+      "source_url": "https://gtfs.org/documentation/schedule/reference/",
+      "unit": "stops",
+      "value": 6
+    },
+    {
+      "denominator": 2,
+      "label": "Trips with known wheelchair_accessible",
+      "metadata": {},
+      "metric_id": "ACCESS.TRIP.WHEELCHAIR.KNOWN",
+      "numerator": 2,
+      "source_url": "https://gtfs.org/documentation/schedule/reference/",
+      "unit": "trips",
+      "value": 2
+    },
+    {
+      "denominator": 1,
+      "label": "Stations with pathway records",
+      "metadata": {},
+      "metric_id": "ACCESS.PATHWAY.PRESENCE",
+      "numerator": 0,
+      "source_url": "https://gtfs.org/documentation/schedule/examples/pathways/",
+      "unit": "stations",
+      "value": 0
+    },
+    {
+      "denominator": 1,
+      "label": "Departures per hour at S1 (peak)",
+      "metadata": {
+        "service_date": "synthetic",
+        "stop_id": "S1",
+        "time_band": "peak"
+      },
+      "metric_id": "SERVICE.DEPARTURES_PER_HOUR",
+      "numerator": 2,
+      "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
+      "unit": "departures/hour",
+      "value": 2
+    },
+    {
+      "denominator": null,
+      "label": "Service span at S1",
+      "metadata": {
+        "first_departure": "07:00:00",
+        "last_departure": "07:40:00",
+        "stop_id": "S1"
+      },
+      "metric_id": "SERVICE.SPAN",
+      "numerator": null,
+      "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
+      "unit": null,
+      "value": "00:40:00"
+    },
+    {
+      "denominator": 60,
+      "label": "Maximum headway at S1",
+      "metadata": {
+        "stop_id": "S1",
+        "time_band": "peak"
+      },
+      "metric_id": "SERVICE.MAX_GAP",
+      "numerator": 2400,
+      "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
+      "unit": "minutes",
+      "value": 40
+    },
+    {
+      "denominator": null,
+      "label": "Median headway at S1",
+      "metadata": {
+        "stop_id": "S1"
+      },
+      "metric_id": "SERVICE.MEDIAN_HEADWAY",
+      "numerator": null,
+      "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
+      "unit": "minutes",
+      "value": 40
+    },
+    {
+      "denominator": null,
+      "label": "Distinct service patterns",
+      "metadata": {},
+      "metric_id": "SERVICE.DAYS_PER_WEEK",
+      "numerator": null,
+      "source_url": "https://gtfs.org/documentation/schedule/reference/",
+      "unit": "patterns",
+      "value": 1
+    },
+    {
+      "denominator": 500.0,
+      "label": "Population within 400 m of stops (proximity coverage)",
+      "metadata": {
+        "crs_epsg": 3347,
+        "metric_type": "proximity_coverage",
+        "note": "Proximity coverage, not walk accessibility.",
+        "threshold_m": 400
+      },
+      "metric_id": "PROXIMITY.POPULATION_WITHIN_400M",
+      "numerator": 100.0,
+      "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
+      "unit": "percent",
+      "value": 20.0
+    },
+    {
+      "denominator": 500.0,
+      "label": "Population within 500 m of stops (proximity coverage)",
+      "metadata": {
+        "crs_epsg": 3347,
+        "metric_type": "proximity_coverage",
+        "note": "Proximity coverage, not walk accessibility.",
+        "threshold_m": 500
+      },
+      "metric_id": "PROXIMITY.POPULATION_WITHIN_500M",
+      "numerator": 100.0,
+      "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
+      "unit": "percent",
+      "value": 20.0
+    },
+    {
+      "denominator": 500.0,
+      "label": "Population within 800 m of stops (proximity coverage)",
+      "metadata": {
+        "crs_epsg": 3347,
+        "metric_type": "proximity_coverage",
+        "note": "Proximity coverage, not walk accessibility.",
+        "threshold_m": 800
+      },
+      "metric_id": "PROXIMITY.POPULATION_WITHIN_800M",
+      "numerator": 300.0,
+      "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
+      "unit": "percent",
+      "value": 60.0
+    },
+    {
+      "denominator": 66.66666666666666,
+      "label": "Coverage gap for low_income_proxy vs reference",
+      "metadata": {
+        "group": "low_income_proxy",
+        "policy_note": "Configurable policy threshold; not a statutory limit.",
+        "reference": "reference",
+        "threshold_m": 500.0
+      },
+      "metric_id": "EQUITY.COVERAGE_GAP",
+      "numerator": 0.0,
+      "source_url": "https://www150.statcan.gc.ca/n1/pub/18-001-x/18-001-x2024005-eng.htm",
+      "unit": "percentage_points",
+      "value": -66.6667
+    }
+  ],
+  "provenance": {
+    "census_sha256": "b207bd251f6c7b32143fc1825ea0c36b44e7e6e55d0ccb7e0f941df94818cdf3",
+    "config_sha256": "210d8801d00a3663c1b93538322637bd790b715512ad00d31db77ee5cb69805e",
+    "crs_epsg": 3347,
+    "executed_at": "2026-09-29T01:44:23.623742Z",
+    "extra": {},
+    "feed_sha256": "bbd62a3afff117eedab1759174fbe5fe66e933ef32aad7c68e850b5578d6c81e",
+    "tool_name": "transit-access-audit",
+    "tool_version": "0.1.0",
+    "validator_name": null,
+    "validator_version": null
+  },
+  "schema_version": "1.0",
+  "summary": {
+    "backlog_count": 0,
+    "error_count": 0,
+    "finding_count": 1,
+    "metric_count": 13,
+    "warning_count": 0
+  },
+  "tool": {
+    "name": "transit-access-audit",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,11 @@
+site_name: Transit Access Audit
+site_description: Canadian GTFS audit toolkit documentation
+repo_url: https://github.com/transitxlabs/transit-access-audit
+theme:
+  name: material
+nav:
+  - Getting Started: index.md
+  - Methodology: methodology.md
+  - CLI reference: cli.md
+  - Result schema: schema.md
+docs_dir: docs
