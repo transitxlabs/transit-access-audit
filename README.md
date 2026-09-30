@@ -1,3 +1,10 @@
+<p align="center" class="brand-mark">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/brand/transitx-mark-dark.png">
+    <img src=".github/brand/transitx-mark.png" alt="TransitX Labs" width="120">
+  </picture>
+</p>
+
 # transit-access-audit
 
 Open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds: accessibility data coverage, service metrics, proximity coverage, and equity diagnostics. The tool reports **data and standards conformance**; it does **not** determine legal accessibility compliance.
