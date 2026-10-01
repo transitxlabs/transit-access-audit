@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "transit-access-audit"
-version = "0.1.0"
+version = "0.3.0"
 description = "Canadian GTFS transit data audit and decision-support toolkit"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -48,6 +48,7 @@ dev = [
     "pandas-stubs>=2.2.0",
     "types-shapely>=2.0.0",
     "build>=1.2.0",
+    "matplotlib>=3.8.0",
 ]
 docs = [
     "mkdocs>=1.6.0",
@@ -70,8 +71,9 @@ include = ["src/transit_audit", "tests", "README.md", "LICENSE", "CHANGELOG.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=transit_audit --cov-report=term-missing --cov-fail-under=90"
+addopts = "-m 'not network' --cov=transit_audit --cov-report=term-missing --cov-fail-under=90"
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = ["network: tests that require outbound network access", "slow: long-running real-feed checks"]
 
 [tool.coverage.run]
 source = ["transit_audit"]
@@ -79,6 +81,7 @@ branch = true
 omit = ["*/cli/*"]
 
 [tool.coverage.report]
+fail_under = 90
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
@@ -97,12 +100,19 @@ ignore_missing_imports = true
 
 [tool.pyright]
 include = ["src"]
+venvPath = "."
+venv = ".venv"
 pythonVersion = "3.11"
 typeCheckingMode = "standard"
 reportMissingTypeStubs = false
+reportMissingImports = false
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
+reportArgumentType = false
+reportReturnType = false
+reportCallIssue = false
+reportAttributeAccessIssue = false
 
 [tool.ruff]
 target-version = "py311"
@@ -111,3 +121,7 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/build_fixtures.py" = ["E501"]

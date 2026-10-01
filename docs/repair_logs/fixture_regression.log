@@ -1,0 +1,81 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: .
+configfile: pyproject.toml
+plugins: platformdirs-4.12.2, cov-7.1.0
+collected 6 items
+
+tests/test_phase3_verification_fixes.py FFF.F.                           [100%]
+
+=================================== FAILURES ===================================
+______________________ test_preregistration_hash_enforced ______________________
+
+    def test_preregistration_hash_enforced() -> None:
+>       from scripts.run_bounds_evaluation import _enforce_preregistration_hash
+E       ModuleNotFoundError: No module named 'scripts'
+
+tests/test_phase3_verification_fixes.py:19: ModuleNotFoundError
+__________________ test_fixture_verification_table_from_code ___________________
+
+    def test_fixture_verification_table_from_code() -> None:
+>       from scripts.run_bounds_evaluation import _fixture_verification_table
+E       ModuleNotFoundError: No module named 'scripts'
+
+tests/test_phase3_verification_fixes.py:29: ModuleNotFoundError
+________________ test_ranking_matches_exhaustive_recomputation _________________
+
+    def test_ranking_matches_exhaustive_recomputation() -> None:
+        from transit_audit.gtfs.reader import read_gtfs_zip
+        from transit_audit.routing.bounds import _pair_widths_for_overrides
+    
+        feed = read_gtfs_zip(FIXTURE)
+        config = BoundsConfig(
+            service_date=date(2024, 6, 3),
+            departure_time="07:00:00",
+            origin_count=5,
+            destination_count=5,
+            random_seed=0,
+        )
+        result = compute_bounds(feed, config)
+        pairs = [(pair.origin_stop_id, pair.destination_stop_id) for pair in result.od_pairs]
+        targets = rank_verification_targets(feed, config, pairs, od_results=result.od_pairs)
+        base = [pair.interval_width for pair in result.od_pairs]
+        exhaustive = {}
+        for stop_id in ("S1", "S2", "S3"):
+            outcomes = [
+                _pair_widths_for_overrides(
+                    feed,
+                    config,
+                    pairs,
+                    stop_overrides={stop_id: value},
+                )
+                for value in ("1", "2")
+            ]
+            change = sum(base) - min(map(sum, outcomes))
+            if change:
+                exhaustive[stop_id] = change
+>       assert {target.entity_id: target.interval_width_change for target in targets} == exhaustive
+E       AssertionError: assert {'S1': 0.4} == {'S1': 8, 'S2': 8, 'S3': 8}
+E         
+E         Differing items:
+E         {'S1': 0.4} != {'S1': 8}
+E         Right contains 2 more items:
+E         {'S2': 8, 'S3': 8}
+E         Use -v to get more diff
+
+tests/test_phase3_verification_fixes.py:68: AssertionError
+______________________ test_fetch_gtfs_streams_with_limit ______________________
+
+tmp_path = PosixPath('./.cache/tmp/pytest-of-studio/pytest-0/test_fetch_gtfs_streams_with_l0')
+
+    def test_fetch_gtfs_streams_with_limit(tmp_path: Path) -> None:
+>       from scripts import fetch_gtfs
+E       ModuleNotFoundError: No module named 'scripts'
+
+tests/test_phase3_verification_fixes.py:85: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_phase3_verification_fixes.py::test_preregistration_hash_enforced
+FAILED tests/test_phase3_verification_fixes.py::test_fixture_verification_table_from_code
+FAILED tests/test_phase3_verification_fixes.py::test_ranking_matches_exhaustive_recomputation
+FAILED tests/test_phase3_verification_fixes.py::test_fetch_gtfs_streams_with_limit
+========================= 4 failed, 2 passed in 0.54s ==========================

@@ -3,8 +3,8 @@ title: transit-access-audit
 message: "If you use this software, please cite it as below."
 authors:
   - name: TransitX Labs Inc.
-version: 0.1.0
-date-released: 2026-09-28
+version: 0.3.0
+date-released: 2026-09-30
 license: Apache-2.0
 repository-code: https://github.com/transitxlabs/transit-access-audit
 keywords:

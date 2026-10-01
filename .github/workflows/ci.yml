@@ -27,7 +27,7 @@ jobs:
       - name: Pyright
         run: pyright src
       - name: Pytest
-        run: pytest
+        run: pytest -m "not network"
       - name: Build wheel
         run: python -m build
       - name: Install wheel smoke test

@@ -1,0 +1,5 @@
+src/transit_audit/routing/ranking.py:97: error: Incompatible types in assignment (expression has type "tuple[str, str]", variable has type "str")  [assignment]
+src/transit_audit/routing/ranking.py:98: error: Argument 1 to "setdefault" of "MutableMapping" has incompatible type "str"; expected "tuple[str, str]"  [arg-type]
+src/transit_audit/routing/ranking.py:100: error: Incompatible types in assignment (expression has type "tuple[str, str]", variable has type "str")  [assignment]
+src/transit_audit/routing/ranking.py:101: error: Argument 1 to "setdefault" of "MutableMapping" has incompatible type "str"; expected "tuple[str, str]"  [arg-type]
+Found 4 errors in 1 file (checked 44 source files)

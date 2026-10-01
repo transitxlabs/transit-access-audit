@@ -27,7 +27,7 @@ def test_wheelchair_parent_inheritance() -> None:
     feed = read_gtfs_zip(FIXTURES / "wheelchair_inheritance.zip")
     _, metrics = run_access_checks(feed, AuditConfig())
     metric = next(m for m in metrics if m.metric_id == "ACCESS.STOP.WHEELCHAIR.KNOWN")
-    assert metric.metadata["raw_unknown_count"] == 1
+    assert metric.metadata["raw_unknown_count"] == 2
     assert metric.metadata["resolved_unknown_count"] == 0
     assert metric.numerator == 3
 

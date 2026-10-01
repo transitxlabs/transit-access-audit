@@ -16,9 +16,9 @@ Label: **proximity coverage** (informed by [StatCan SDG table 23-10-0314](https:
 
 Frequency and span metrics use a configured `service_date` (default: first Monday in June 2024). Active `service_id`s are computed from `calendar.txt` and `calendar_dates.txt` (additions and removals). `frequencies.txt` rows expand into departure times (including past-midnight end times).
 
-- `SERVICE.BAND_SPAN` — first-to-last departure within a configured time band at a reference stop (or aggregated across stops per `reference_stop_aggregation`).
-- `SERVICE.DAILY_SPAN` — first-to-last departure across the full active service day.
-- `SERVICE.DEPARTURES_PER_HOUR`, `SERVICE.MAX_GAP`, `SERVICE.MEDIAN_HEADWAY` — band-limited headway metrics.
+- `SERVICE.BAND_SPAN`: first-to-last departure within a configured time band at a reference stop (or aggregated across stops per `reference_stop_aggregation`).
+- `SERVICE.DAILY_SPAN`: first-to-last departure across the full active service day.
+- `SERVICE.DEPARTURES_PER_HOUR`, `SERVICE.MAX_GAP`, `SERVICE.MEDIAN_HEADWAY`: band-limited headway metrics.
 
 Informed by [TCQSM 3rd edition](https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition). Scheduled headways are **scheduled regularity**, not operational reliability.
 

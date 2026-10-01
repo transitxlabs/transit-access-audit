@@ -1,0 +1,17 @@
+{
+  "filename": "edmonton_transit_gtfs.zip",
+  "sha256": "553a9557294910b91c09f10c77cbde47129e9c9e8ddc8671b34b1d242e3561fb",
+  "bytes": 19065635,
+  "url": "https://gtfs.edmonton.ca/TMGTFSRealTimeWebService/GTFS/gtfs.zip",
+  "licence_url": "https://data.edmonton.ca/stories/s/Open-Government-Licence-Edmonton/msh8-if28/",
+  "attribution": "Contains information licensed under the Open Government Licence – City of Edmonton.",
+  "dataset_url": "https://data.edmonton.ca/api/views/4fvt-p2se.json",
+  "licence_version": "1.0 (July 2022)",
+  "snapshot_path": "data/snapshots/sha256/553a9557294910b91c09f10c77cbde47129e9c9e8ddc8671b34b1d242e3561fb.zip",
+  "feed": "edmonton",
+  "acquisition_date": "2026-09-30",
+  "acquisition_date_status": "historical repository record; exact timestamp unavailable",
+  "snapshot_verified_date": "2026-10-01",
+  "endpoint_association_source": "https://data.edmonton.ca/api/views/4fvt-p2se.json",
+  "endpoint_association_status": "Publisher metadata cited in the local independent review; not freshly retrievable in this sandbox."
+}

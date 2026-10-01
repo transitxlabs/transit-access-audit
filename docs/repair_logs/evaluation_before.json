@@ -1,0 +1,354 @@
+{
+  "hardware_note": "Apple M3 Ultra, Mac Studio, local evaluation",
+  "preregistration_sha256_archived": "c7d47f31f78f3d50c13f19324a845ed791b1392c18994fbed1cc41484fb400a0",
+  "preregistration_sha256": "b9b793b753bffcf761232632f85a910ee2af444a8db6018aaf9ffc1dc262bde2",
+  "feeds": {
+    "ttc": {
+      "feed_name": "ttc",
+      "feed_path": "./.cache/gtfs/ttc_completegtfs.zip",
+      "service_date": "2026-10-07",
+      "runtime_seconds": 78.68403558299906,
+      "peak_memory_mb": null,
+      "mean_interval_width": 0.0,
+      "median_interval_width": 0.0,
+      "mean_interval_width_ci95": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "optimistic_reachable_od_pairs": 4,
+      "pessimistic_reachable_od_pairs": 4,
+      "schedule_only_reachable_od_pairs": 196,
+      "unknown_stop_count": 0,
+      "unknown_trip_count": 0,
+      "od_pair_count": 800,
+      "verification_targets": [],
+      "transfer_sensitivity": [],
+      "walk_sensitivity": [],
+      "validator": {
+        "status": "completed",
+        "validator_version": "6.0.0",
+        "notice_count": 13,
+        "error_count": 1,
+        "warning_count": 12,
+        "sample_codes": [
+          "GTFS.MD.equal_shape_distance_diff_coordinates_distance_below_threshold",
+          "GTFS.MD.fast_travel_between_consecutive_stops",
+          "GTFS.MD.missing_feed_contact_email_and_url",
+          "GTFS.MD.missing_timepoint_value",
+          "GTFS.MD.pathway_dangling_generic_node",
+          "GTFS.MD.pathway_unreachable_location",
+          "GTFS.MD.stop_too_far_from_shape",
+          "GTFS.MD.stop_too_far_from_shape_using_user_distance",
+          "GTFS.MD.stop_without_stop_time",
+          "GTFS.MD.stops_match_shape_out_of_order",
+          "GTFS.MD.unknown_column",
+          "GTFS.MD.unused_parent_station",
+          "GTFS.MD.unused_shape"
+        ],
+        "catches_accessibility_gaps": false,
+        "report_path": "./docs/bounds_eval/validator/ttc_completegtfs/report.json"
+      },
+      "config": {
+        "service_date": "2026-10-07",
+        "departure_time": "08:30:00",
+        "max_travel_minutes": 60,
+        "max_transfers": 2,
+        "min_transfer_minutes": 5,
+        "origin_count": 20,
+        "destination_count": 40,
+        "random_seed": 42,
+        "verification_rank_limit": 15,
+        "walk_speed_mps": 1.4,
+        "walk_radius_m": 300.0,
+        "rank_verification": false
+      },
+      "metadata": {
+        "active_trip_count_optimistic": 0,
+        "active_trip_count_pessimistic": 0,
+        "active_trip_count_schedule_only": 40437,
+        "walk_edge_count": 62194
+      }
+    },
+    "calgary": {
+      "feed_name": "calgary",
+      "feed_path": "./.cache/gtfs/calgary_transit_gtfs.zip",
+      "service_date": "2026-09-30",
+      "runtime_seconds": 13.358626666999044,
+      "peak_memory_mb": null,
+      "mean_interval_width": 0.00625,
+      "median_interval_width": 0.0,
+      "mean_interval_width_ci95": {
+        "lower": 0.00125,
+        "upper": 0.0125
+      },
+      "optimistic_reachable_od_pairs": 5,
+      "pessimistic_reachable_od_pairs": 0,
+      "schedule_only_reachable_od_pairs": 74,
+      "unknown_stop_count": 6220,
+      "unknown_trip_count": 62862,
+      "od_pair_count": 800,
+      "verification_targets": [],
+      "transfer_sensitivity": [
+        {
+          "min_transfer_minutes": 3,
+          "max_travel_minutes": 45,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 45,
+          "runtime_seconds": 11.65017274999991
+        },
+        {
+          "min_transfer_minutes": 3,
+          "max_travel_minutes": 60,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 117,
+          "runtime_seconds": 11.57634541600055
+        },
+        {
+          "min_transfer_minutes": 3,
+          "max_travel_minutes": 90,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 301,
+          "runtime_seconds": 11.67563679199884
+        },
+        {
+          "min_transfer_minutes": 5,
+          "max_travel_minutes": 45,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 26,
+          "runtime_seconds": 11.714459000002535
+        },
+        {
+          "min_transfer_minutes": 5,
+          "max_travel_minutes": 60,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 74,
+          "runtime_seconds": 11.606889708997187
+        },
+        {
+          "min_transfer_minutes": 5,
+          "max_travel_minutes": 90,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 219,
+          "runtime_seconds": 11.65748829199947
+        },
+        {
+          "min_transfer_minutes": 10,
+          "max_travel_minutes": 45,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 11,
+          "runtime_seconds": 11.598322833000566
+        },
+        {
+          "min_transfer_minutes": 10,
+          "max_travel_minutes": 60,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 35,
+          "runtime_seconds": 11.64417237499947
+        },
+        {
+          "min_transfer_minutes": 10,
+          "max_travel_minutes": 90,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "pessimistic_reachable": 0,
+          "schedule_only_reachable": 122,
+          "runtime_seconds": 11.664715541999612
+        }
+      ],
+      "walk_sensitivity": [
+        {
+          "walk_speed_mps": 1.0,
+          "walk_radius_m": 200.0,
+          "mean_interval_width": 0.0,
+          "optimistic_reachable": 0,
+          "schedule_only_reachable": 67
+        },
+        {
+          "walk_speed_mps": 1.0,
+          "walk_radius_m": 300.0,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "schedule_only_reachable": 74
+        },
+        {
+          "walk_speed_mps": 1.0,
+          "walk_radius_m": 500.0,
+          "mean_interval_width": 0.01,
+          "optimistic_reachable": 8,
+          "schedule_only_reachable": 91
+        },
+        {
+          "walk_speed_mps": 1.4,
+          "walk_radius_m": 200.0,
+          "mean_interval_width": 0.0,
+          "optimistic_reachable": 0,
+          "schedule_only_reachable": 68
+        },
+        {
+          "walk_speed_mps": 1.4,
+          "walk_radius_m": 300.0,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "schedule_only_reachable": 74
+        },
+        {
+          "walk_speed_mps": 1.4,
+          "walk_radius_m": 500.0,
+          "mean_interval_width": 0.01,
+          "optimistic_reachable": 8,
+          "schedule_only_reachable": 103
+        },
+        {
+          "walk_speed_mps": 1.8,
+          "walk_radius_m": 200.0,
+          "mean_interval_width": 0.0,
+          "optimistic_reachable": 0,
+          "schedule_only_reachable": 70
+        },
+        {
+          "walk_speed_mps": 1.8,
+          "walk_radius_m": 300.0,
+          "mean_interval_width": 0.00625,
+          "optimistic_reachable": 5,
+          "schedule_only_reachable": 78
+        },
+        {
+          "walk_speed_mps": 1.8,
+          "walk_radius_m": 500.0,
+          "mean_interval_width": 0.01,
+          "optimistic_reachable": 8,
+          "schedule_only_reachable": 111
+        }
+      ],
+      "validator": {
+        "status": "completed",
+        "validator_version": "6.0.0",
+        "notice_count": 12,
+        "error_count": 2,
+        "warning_count": 10,
+        "sample_codes": [
+          "GTFS.MD.decreasing_or_equal_stop_time_distance",
+          "GTFS.MD.duplicate_route_name",
+          "GTFS.MD.equal_shape_distance_diff_coordinates_distance_below_threshold",
+          "GTFS.MD.equal_shape_distance_same_coordinates",
+          "GTFS.MD.leading_or_trailing_whitespaces",
+          "GTFS.MD.missing_recommended_field",
+          "GTFS.MD.missing_recommended_file",
+          "GTFS.MD.mixed_case_recommended_field",
+          "GTFS.MD.route_long_name_contains_short_name",
+          "GTFS.MD.stop_too_far_from_shape_using_user_distance",
+          "GTFS.MD.trip_distance_exceeds_shape_distance",
+          "GTFS.MD.trip_distance_exceeds_shape_distance_below_threshold"
+        ],
+        "catches_accessibility_gaps": false,
+        "report_path": "./docs/bounds_eval/validator/calgary_transit_gtfs/report.json"
+      },
+      "config": {
+        "service_date": "2026-09-30",
+        "departure_time": "08:30:00",
+        "max_travel_minutes": 60,
+        "max_transfers": 2,
+        "min_transfer_minutes": 5,
+        "origin_count": 20,
+        "destination_count": 40,
+        "random_seed": 42,
+        "verification_rank_limit": 15,
+        "walk_speed_mps": 1.4,
+        "walk_radius_m": 300.0,
+        "rank_verification": false
+      },
+      "metadata": {
+        "active_trip_count_optimistic": 0,
+        "active_trip_count_pessimistic": 0,
+        "active_trip_count_schedule_only": 7926,
+        "walk_edge_count": 30984
+      }
+    },
+    "edmonton": {
+      "feed_name": "edmonton",
+      "feed_path": "./.cache/gtfs/edmonton_transit_gtfs.zip",
+      "service_date": "2026-09-30",
+      "runtime_seconds": 33.36427970799923,
+      "peak_memory_mb": null,
+      "mean_interval_width": 0.0,
+      "median_interval_width": 0.0,
+      "mean_interval_width_ci95": {
+        "lower": 0.0,
+        "upper": 0.0
+      },
+      "optimistic_reachable_od_pairs": 3,
+      "pessimistic_reachable_od_pairs": 3,
+      "schedule_only_reachable_od_pairs": 97,
+      "unknown_stop_count": 416,
+      "unknown_trip_count": 0,
+      "od_pair_count": 800,
+      "verification_targets": [],
+      "transfer_sensitivity": [],
+      "walk_sensitivity": [],
+      "validator": {
+        "status": "completed",
+        "validator_version": "6.0.0",
+        "notice_count": 6,
+        "error_count": 0,
+        "warning_count": 6,
+        "sample_codes": [
+          "GTFS.MD.route_color_contrast",
+          "GTFS.MD.route_long_name_contains_short_name",
+          "GTFS.MD.stop_without_stop_time",
+          "GTFS.MD.unknown_column",
+          "GTFS.MD.unknown_file",
+          "GTFS.MD.unused_parent_station"
+        ],
+        "catches_accessibility_gaps": false,
+        "report_path": "./docs/bounds_eval/validator/edmonton_transit_gtfs/report.json"
+      },
+      "config": {
+        "service_date": "2026-09-30",
+        "departure_time": "08:30:00",
+        "max_travel_minutes": 60,
+        "max_transfers": 2,
+        "min_transfer_minutes": 5,
+        "origin_count": 20,
+        "destination_count": 40,
+        "random_seed": 42,
+        "verification_rank_limit": 15,
+        "walk_speed_mps": 1.4,
+        "walk_radius_m": 300.0,
+        "rank_verification": false
+      },
+      "metadata": {
+        "active_trip_count_optimistic": 0,
+        "active_trip_count_pessimistic": 0,
+        "active_trip_count_schedule_only": 12227,
+        "walk_edge_count": 30856
+      }
+    }
+  },
+  "primary_feed": "calgary",
+  "headline": {
+    "feed": "calgary",
+    "mean_interval_width": 0.00625,
+    "mean_interval_width_ci95": {
+      "lower": 0.00125,
+      "upper": 0.0125
+    },
+    "optimistic_reachable_od_pairs": 5,
+    "pessimistic_reachable_od_pairs": 0
+  }
+}

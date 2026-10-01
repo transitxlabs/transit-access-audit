@@ -1,0 +1,17 @@
+{
+  "command": [
+    ".venv/bin/pytest",
+    "tests/test_phase3_verification_fixes.py",
+    "--no-cov"
+  ],
+  "exit_code": 1,
+  "status": "completed",
+  "runtime_seconds": 1.0167608340016159,
+  "timeout_seconds": 60.0,
+  "peak_top_mem_mb": null,
+  "top_errors": [
+    "[Errno 1] Operation not permitted: 'top'"
+  ],
+  "child_max_rss_bytes": 95453184,
+  "rss_limitation": "Maximum child resident memory; not compressed/swapped footprint or aggregate process memory."
+}

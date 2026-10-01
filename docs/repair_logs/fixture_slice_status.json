@@ -1,0 +1,27 @@
+{
+  "command": [
+    ".venv/bin/transit-audit",
+    "bounds",
+    "tests/fixtures/bounds_route.zip",
+    "--service-date",
+    "2024-06-03",
+    "--departure-time",
+    "07:00:00",
+    "--origin-count",
+    "5",
+    "--destination-count",
+    "5",
+    "--output",
+    "docs/repair_logs/fixture.json"
+  ],
+  "exit_code": 0,
+  "status": "completed",
+  "runtime_seconds": 1.018893417000072,
+  "timeout_seconds": 60.0,
+  "peak_top_mem_mb": null,
+  "top_errors": [
+    "[Errno 1] Operation not permitted: 'top'"
+  ],
+  "child_max_rss_bytes": 87162880,
+  "rss_limitation": "Maximum child resident memory; not compressed/swapped footprint or aggregate process memory."
+}

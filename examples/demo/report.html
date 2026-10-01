@@ -8,7 +8,9 @@
     :root { color-scheme: light; }
     body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 0; color: #111; background: #fff; }
     .skip { position: absolute; left: -9999px; }
-    .skip:focus { left: 1rem; top: 1rem; background: #fff; padding: .5rem; z-index: 10; }
+    .skip:focus,
+    .skip:focus-visible { left: 1rem; top: 1rem; background: #fff; padding: .5rem; z-index: 10; outline: 2px solid #005fcc; }
+    a:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; }
     header, main, footer { max-width: 960px; margin: 0 auto; padding: 1rem; }
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
     th, td { border: 1px solid #444; padding: .5rem; text-align: left; vertical-align: top; }
@@ -20,7 +22,7 @@
 <body>
   <a class="skip" href="#main">Skip to main content</a>
   <header>
-    <p><strong>Transit Access Audit</strong> — version 0.1.0</p>
+    <p><strong>Transit Access Audit</strong> version 0.3.0</p>
   </header>
   <main id="main">
     <h1>Transit Access Audit Report</h1>
@@ -49,7 +51,7 @@
           <tr><td>Findings</td><td>1</td></tr>
           <tr><td>Errors</td><td>0</td></tr>
           <tr><td>Warnings</td><td>0</td></tr>
-          <tr><td>Metrics</td><td>13</td></tr>
+          <tr><td>Metrics</td><td>14</td></tr>
           <tr><td>Backlog items</td><td>0</td></tr>
         </tbody>
       </table>
@@ -84,8 +86,11 @@
       <h2>Metrics</h2>
       <p class="note">
         Proximity metrics report <strong>proximity coverage</strong>, not walk accessibility.
-        Equity thresholds are configurable policy choices, not statutory limits.
+        Population weighting uses areal intersection (uniform density assumption) unless configured otherwise.
+        Equity outputs are <strong>descriptive associations</strong> between group proximity shares;
+        they are not causal, not legal compliance, and not statutory limits.
       </p>
+      
       <table>
         <caption>Computed metrics</caption>
         <thead>
@@ -115,13 +120,13 @@
           
           <tr>
             <td>ACCESS.STOP.WHEELCHAIR.KNOWN</td>
-            <td>Stops with known wheelchair_boarding</td>
+            <td>Stops with known wheelchair_boarding (resolved)</td>
             <td>6</td>
             <td>6</td>
             <td>6</td>
             <td>
               
-              <a href="https://gtfs.org/documentation/schedule/reference/">https://gtfs.org/documentation/schedule/reference/</a>
+              <a href="https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding">https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding</a>
               
             </td>
           </tr>
@@ -134,7 +139,7 @@
             <td>2</td>
             <td>
               
-              <a href="https://gtfs.org/documentation/schedule/reference/">https://gtfs.org/documentation/schedule/reference/</a>
+              <a href="https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding">https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding</a>
               
             </td>
           </tr>
@@ -166,8 +171,8 @@
           </tr>
           
           <tr>
-            <td>SERVICE.SPAN</td>
-            <td>Service span at S1</td>
+            <td>SERVICE.BAND_SPAN</td>
+            <td>Band-limited service span at S1 (peak)</td>
             <td>00:40:00</td>
             <td></td>
             <td></td>
@@ -205,6 +210,19 @@
           </tr>
           
           <tr>
+            <td>SERVICE.DAILY_SPAN</td>
+            <td>Daily service span (first to last departure)</td>
+            <td>00:40:00</td>
+            <td></td>
+            <td></td>
+            <td>
+              
+              <a href="https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition">https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition</a>
+              
+            </td>
+          </tr>
+          
+          <tr>
             <td>SERVICE.DAYS_PER_WEEK</td>
             <td>Distinct service patterns</td>
             <td>1</td>
@@ -220,8 +238,8 @@
           <tr>
             <td>PROXIMITY.POPULATION_WITHIN_400M</td>
             <td>Population within 400 m of stops (proximity coverage)</td>
-            <td>20.0</td>
-            <td>100.0</td>
+            <td>8.7309</td>
+            <td>43.6546</td>
             <td>500.0</td>
             <td>
               
@@ -233,8 +251,8 @@
           <tr>
             <td>PROXIMITY.POPULATION_WITHIN_500M</td>
             <td>Population within 500 m of stops (proximity coverage)</td>
-            <td>20.0</td>
-            <td>100.0</td>
+            <td>10.9842</td>
+            <td>54.9212</td>
             <td>500.0</td>
             <td>
               
@@ -246,8 +264,8 @@
           <tr>
             <td>PROXIMITY.POPULATION_WITHIN_800M</td>
             <td>Population within 800 m of stops (proximity coverage)</td>
-            <td>60.0</td>
-            <td>300.0</td>
+            <td>17.9642</td>
+            <td>89.8208</td>
             <td>500.0</td>
             <td>
               
@@ -258,10 +276,10 @@
           
           <tr>
             <td>EQUITY.COVERAGE_GAP</td>
-            <td>Coverage gap for low_income_proxy vs reference</td>
-            <td>-66.6667</td>
+            <td>Descriptive coverage association for low_income_proxy vs reference</td>
+            <td>-36.6141</td>
             <td>0.0</td>
-            <td>66.66666666666666</td>
+            <td>36.6141</td>
             <td>
               
               <a href="https://www150.statcan.gc.ca/n1/pub/18-001-x/18-001-x2024005-eng.htm">https://www150.statcan.gc.ca/n1/pub/18-001-x/18-001-x2024005-eng.htm</a>
@@ -302,10 +320,10 @@
           <tr><th scope="col">Field</th><th scope="col">Value</th></tr>
         </thead>
         <tbody>
-          <tr><td>Executed at</td><td>2026-09-29 01:44:23.623742+00:00</td></tr>
-          <tr><td>Feed SHA-256</td><td>bbd62a3afff117eedab1759174fbe5fe66e933ef32aad7c68e850b5578d6c81e</td></tr>
+          <tr><td>Executed at</td><td>2026-10-01 15:42:18.631896+00:00</td></tr>
+          <tr><td>Feed SHA-256</td><td>3bcafdf1263bdda9587de9294085dfe65512bcca3bc217c24ab4c5a7d672ee36</td></tr>
           <tr><td>Config SHA-256</td><td>210d8801d00a3663c1b93538322637bd790b715512ad00d31db77ee5cb69805e</td></tr>
-          <tr><td>Census SHA-256</td><td>b207bd251f6c7b32143fc1825ea0c36b44e7e6e55d0ccb7e0f941df94818cdf3</td></tr>
+          <tr><td>Census SHA-256</td><td>bd53d7970a376d69d47f81b11dea7f0eb456c615db8d494ebf7ecb6e154aaac4</td></tr>
           <tr><td>CRS EPSG</td><td>3347</td></tr>
           <tr><td>Validator</td><td> </td></tr>
         </tbody>

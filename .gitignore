@@ -12,3 +12,12 @@ htmlcov/
 .transit-audit-validator/
 audit-output/
 site/
+vendor/*.jar
+.cache/
+results/
+research/
+PROJECT_BRIEF.md
+
+# Local review and verification evidence are never part of the release.
+.review/
+state/

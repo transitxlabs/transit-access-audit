@@ -13,7 +13,10 @@ from typing import Any
 from transit_audit.models import Finding, Severity
 
 VALIDATOR_VERSION = "6.0.0"
-VALIDATOR_JAR_NAME = f"gtfs-validator-{VALIDATOR_VERSION}-all.jar"
+VALIDATOR_JAR_NAMES = (
+    f"gtfs-validator-{VALIDATOR_VERSION}-all.jar",
+    f"gtfs-validator-{VALIDATOR_VERSION}-cli.jar",
+)
 DEFAULT_TIMEOUT_SECONDS = 300
 DEFAULT_MAX_OUTPUT_BYTES = 1_048_576
 
@@ -29,11 +32,21 @@ def _bounded_output(stdout: bytes, stderr: bytes, max_bytes: int) -> tuple[str, 
     )
 
 
+def _project_root() -> Path:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "pyproject.toml").is_file():
+            return parent
+    return here.parents[3]
+
+
 def run_mobilitydata_validator(
     feed_path: Path,
     output_dir: Path | None = None,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
     max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES,
+    memory_limit_mb: float | None = None,
+    parent_memory_mb: float | None = None,
 ) -> Path:
     if not java_available():
         raise RuntimeError("Java runtime not available for MobilityData validator")
@@ -42,10 +55,17 @@ def run_mobilitydata_validator(
     if not feed_path.is_file():
         raise FileNotFoundError(f"GTFS feed not found: {feed_path}")
 
-    jar_path = Path(__file__).resolve().parents[3] / "vendor" / VALIDATOR_JAR_NAME
-    if not jar_path.exists():
+    jar_path: Path | None = None
+    vendor_dir = _project_root() / "vendor"
+    for jar_name in VALIDATOR_JAR_NAMES:
+        candidate = vendor_dir / jar_name
+        if candidate.exists():
+            jar_path = candidate
+            break
+    if jar_path is None:
         raise FileNotFoundError(
-            f"Pinned validator JAR not found at {jar_path}. "
+            f"Pinned validator JAR not found in {vendor_dir} "
+            f"(expected one of: {', '.join(VALIDATOR_JAR_NAMES)}). "
             "Place the MobilityData validator JAR in vendor/ or ingest report.json directly."
         )
 
@@ -58,15 +78,26 @@ def run_mobilitydata_validator(
         resolved_output.mkdir(parents=True, exist_ok=True)
 
     report_path = resolved_output / "report.json"
-    cmd = [
-        "java",
-        "-jar",
-        str(jar_path.resolve()),
-        "-i",
-        str(feed_path),
-        "-o",
-        str(resolved_output),
-    ]
+    java_cmd = ["java"]
+    if memory_limit_mb is not None:
+        # Reserve observed parent memory (or a conservative allocation) and native JVM space.
+        parent_reserve = max(2048.0, parent_memory_mb or 0.0)
+        native_reserve = max(1024.0, memory_limit_mb * 0.25)
+        heap_mb = int(memory_limit_mb - parent_reserve - native_reserve)
+        if heap_mb < 256:
+            raise MemoryError("Insufficient process-tree budget for parent, native JVM and Java heap")
+        java_cmd.extend([f"-Xmx{heap_mb}m"])
+    java_cmd.extend(
+        [
+            "-jar",
+            str(jar_path.resolve()),
+            "-i",
+            str(feed_path),
+            "-o",
+            str(resolved_output),
+        ]
+    )
+    cmd = java_cmd
 
     try:
         completed = subprocess.run(

@@ -1,0 +1,255 @@
+{
+  "schema_version": "1.1",
+  "feed_path": "tests/fixtures/bounds_route.zip",
+  "config": {
+    "service_date": "2024-06-03",
+    "departure_time": "07:00:00",
+    "max_travel_minutes": 60,
+    "max_transfers": 2,
+    "min_transfer_minutes": 5,
+    "origin_count": 5,
+    "destination_count": 5,
+    "random_seed": 42,
+    "verification_rank_limit": 25,
+    "walk_speed_mps": 1.4,
+    "walk_radius_m": 300.0,
+    "rank_verification": true
+  },
+  "origin_stop_ids": [
+    "S3",
+    "S1",
+    "S4",
+    "S5",
+    "S2"
+  ],
+  "destination_stop_ids": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+  ],
+  "od_pairs": [
+    {
+      "origin_stop_id": "S3",
+      "destination_stop_id": "S1",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 187,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S3",
+      "destination_stop_id": "S2",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S3",
+      "destination_stop_id": "S4",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S3",
+      "destination_stop_id": "S5",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 190,
+      "pessimistic_travel_seconds": 190
+    },
+    {
+      "origin_stop_id": "S1",
+      "destination_stop_id": "S2",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 97,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S1",
+      "destination_stop_id": "S3",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 187,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S1",
+      "destination_stop_id": "S4",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 282,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S1",
+      "destination_stop_id": "S5",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 377,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S4",
+      "destination_stop_id": "S1",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 282,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S4",
+      "destination_stop_id": "S2",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 190,
+      "pessimistic_travel_seconds": 190
+    },
+    {
+      "origin_stop_id": "S4",
+      "destination_stop_id": "S3",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S4",
+      "destination_stop_id": "S5",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S5",
+      "destination_stop_id": "S1",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 377,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S5",
+      "destination_stop_id": "S2",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 285,
+      "pessimistic_travel_seconds": 285
+    },
+    {
+      "origin_stop_id": "S5",
+      "destination_stop_id": "S3",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 190,
+      "pessimistic_travel_seconds": 190
+    },
+    {
+      "origin_stop_id": "S5",
+      "destination_stop_id": "S4",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S2",
+      "destination_stop_id": "S1",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 97,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "S2",
+      "destination_stop_id": "S3",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 95,
+      "pessimistic_travel_seconds": 95
+    },
+    {
+      "origin_stop_id": "S2",
+      "destination_stop_id": "S4",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 190,
+      "pessimistic_travel_seconds": 190
+    },
+    {
+      "origin_stop_id": "S2",
+      "destination_stop_id": "S5",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": true,
+      "interval_width": 0,
+      "optimistic_travel_seconds": 285,
+      "pessimistic_travel_seconds": 285
+    }
+  ],
+  "optimistic_summary": {
+    "policy": "optimistic",
+    "reachable_destination_count": 20,
+    "mean_travel_seconds": 189.3
+  },
+  "pessimistic_summary": {
+    "policy": "pessimistic",
+    "reachable_destination_count": 12,
+    "mean_travel_seconds": 158.33333333333334
+  },
+  "schedule_only_summary": {
+    "policy": "schedule_only",
+    "reachable_destination_count": 20,
+    "mean_travel_seconds": 189.3
+  },
+  "mean_interval_width": 0.4,
+  "median_interval_width": 0.0,
+  "verification_targets": [
+    {
+      "entity_type": "stop",
+      "entity_id": "S1",
+      "field": "wheelchair_boarding",
+      "interval_width_change": 0.4,
+      "affected_od_pairs": 8,
+      "metadata": {
+        "mean_width_if_accessible": 0,
+        "mean_width_if_not_accessible": 0
+      }
+    }
+  ],
+  "unknown_stop_count": 1,
+  "unknown_trip_count": 1,
+  "runtime_seconds": 0.034440332998201484,
+  "metadata": {
+    "ranking_runtime_seconds": 0.021600833999400493,
+    "ranking_positive_target_count": 1,
+    "active_trip_count_optimistic": 2,
+    "active_trip_count_pessimistic": 1,
+    "active_trip_count_schedule_only": 2,
+    "walk_edge_count": 14
+  }
+}

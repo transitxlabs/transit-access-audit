@@ -93,7 +93,9 @@ def build_fixtures() -> None:
     conflict_trips = common_trips.replace("T1,East,1", "T1,East,1").replace(
         "T2,West,1", "T2,West,1"
     )
-    conflict_stops = common_stops.replace("S1,Stop One,48.4284,-123.3656,1,0", "S1,Stop One,48.4284,-123.3656,0,0")
+    conflict_stops = common_stops.replace(
+        "S1,Stop One,48.4284,-123.3656,1,0", "S1,Stop One,48.4284,-123.3656,2,0"
+    )
     _write_zip(
         "trip_stop_conflict.zip",
         {
@@ -362,6 +364,36 @@ def build_fixtures() -> None:
             ),
             "trips.txt": common_trips,
             "stop_times.txt": common_stop_times,
+        },
+    )
+
+    _write_zip(
+        "bounds_route.zip",
+        {
+            "agency.txt": agency_line,
+            "calendar.txt": common_calendar,
+            "routes.txt": "route_id,agency_id,route_short_name,route_type\nR1,A1,1,3\n",
+            "stops.txt": (
+                "stop_id,stop_name,stop_lat,stop_lon,wheelchair_boarding,location_type\n"
+                "S1,Unknown Origin,48.4284,-123.3656,,0\n"
+                "S2,Mid Accessible,48.4290,-123.3640,1,0\n"
+                "S3,Far Accessible,48.4300,-123.3630,1,0\n"
+                "S4,Known Origin,48.4310,-123.3620,1,0\n"
+                "S5,Known Destination,48.4320,-123.3610,1,0\n"
+            ),
+            "trips.txt": (
+                "route_id,service_id,trip_id,trip_headsign,wheelchair_accessible\n"
+                "R1,WEEKDAY,T1,East,\n"
+                "R1,WEEKDAY,T2,West,1\n"
+            ),
+            "stop_times.txt": (
+                "trip_id,arrival_time,departure_time,stop_id,stop_sequence\n"
+                "T1,07:00:00,07:00:00,S1,1\n"
+                "T1,07:20:00,07:20:00,S2,2\n"
+                "T1,07:40:00,07:40:00,S3,3\n"
+                "T2,07:10:00,07:10:00,S4,1\n"
+                "T2,07:30:00,07:30:00,S5,2\n"
+            ),
         },
     )
 

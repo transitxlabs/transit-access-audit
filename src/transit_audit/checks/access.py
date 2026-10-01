@@ -9,6 +9,8 @@ import pandas as pd
 from transit_audit.config import AuditConfig
 from transit_audit.gtfs.reader import GtfsFeed
 from transit_audit.models import Finding, Metric, Severity
+from transit_audit.routing.accessibility import resolve_stop_boarding
+from transit_audit.routing.policy import GTFS_ACCESSIBILITY_SPEC, wheelchair_category
 
 VALID_PATHWAY_MODES = {"1", "2", "3", "4", "5", "6", "7"}
 
@@ -21,25 +23,13 @@ def _unique_column_strings(df: pd.DataFrame, column: str) -> list[str]:
     return sorted({str(value) for value in df[column].tolist()})
 
 
-def _wheelchair_category(value: str) -> str:
-    if value == "" or value == "2":
-        return "unknown"
-    if value == "1":
-        return "accessible"
-    if value == "0":
-        return "not_accessible"
-    return "unknown"
-
-
 def _resolve_wheelchair_boarding(stops: pd.DataFrame) -> tuple[pd.Series, list[str]]:
     """Resolve wheelchair_boarding with parent_station inheritance."""
     if stops.empty:
         return pd.Series(dtype=str), []
 
-    if "wheelchair_boarding" in stops.columns:
-        resolved = cast(pd.Series, stops["wheelchair_boarding"].astype(str))
-    else:
-        resolved = pd.Series("", index=stops.index, dtype=str)
+    resolved_map = resolve_stop_boarding(stops)
+    issues: list[str] = []
     parent_map: dict[str, str] = {}
     if "parent_station" in stops.columns:
         for _, row in stops.iterrows():
@@ -47,31 +37,19 @@ def _resolve_wheelchair_boarding(stops: pd.DataFrame) -> tuple[pd.Series, list[s
             if parent:
                 parent_map[str(row["stop_id"])] = parent
 
-    issues: list[str] = []
-
-    def resolve_value(stop_id: str) -> str:
+    for stop_id in resolved_map:
         chain: set[str] = set()
         current = stop_id
         while current in parent_map:
             if current in chain:
                 issues.append(f"cyclic_parent:{stop_id}")
-                return "unknown"
+                break
             chain.add(current)
             current = parent_map[current]
-        parent_row = stops[stops["stop_id"].astype(str) == current]
-        if parent_row.empty:
-            return "unknown"
-        return _wheelchair_category(str(parent_row.iloc[0].get("wheelchair_boarding", "")))
 
-    result: pd.Series = resolved.copy()
-    for idx, row in stops.iterrows():
-        stop_id = str(row["stop_id"])
-        raw = str(row.get("wheelchair_boarding", ""))
-        if _wheelchair_category(raw) == "unknown" and stop_id in parent_map:
-            result.at[idx] = resolve_value(stop_id)
-        else:
-            result.at[idx] = _wheelchair_category(raw)
-
+    result = stops["stop_id"].astype(str).map(
+        lambda stop_id: wheelchair_category(resolved_map.get(stop_id, ""))
+    )
     return result, issues
 
 
@@ -89,7 +67,7 @@ def run_access_checks(feed: GtfsFeed, config: AuditConfig) -> tuple[list[Finding
 
     if config.is_check_enabled("ACCESS.STOP.WHEELCHAIR.KNOWN") and not stops.empty:
         raw_categories = (
-            stops["wheelchair_boarding"].map(_wheelchair_category)
+            stops["wheelchair_boarding"].map(wheelchair_category)
             if "wheelchair_boarding" in stops.columns
             else pd.Series(["unknown"] * len(stops), index=stops.index)
         )
@@ -112,7 +90,7 @@ def run_access_checks(feed: GtfsFeed, config: AuditConfig) -> tuple[list[Finding
                     "resolved_breakdown": resolved.value_counts().to_dict(),
                     "inheritance_issues": inheritance_issues,
                 },
-                source_url="https://gtfs.org/documentation/schedule/reference/",
+                source_url=GTFS_ACCESSIBILITY_SPEC,
             )
         )
         if resolved_unknown:
@@ -140,7 +118,7 @@ def run_access_checks(feed: GtfsFeed, config: AuditConfig) -> tuple[list[Finding
             unknown_trips = len(trips)
         else:
             unknown_trips = _mask_count(
-                trips["wheelchair_accessible"].map(_wheelchair_category).eq("unknown")
+                trips["wheelchair_accessible"].map(wheelchair_category).eq("unknown")
             )
             metrics.append(
                 Metric(
@@ -150,7 +128,7 @@ def run_access_checks(feed: GtfsFeed, config: AuditConfig) -> tuple[list[Finding
                     numerator=int(len(trips) - unknown_trips),
                     denominator=len(trips),
                     unit="trips",
-                    source_url="https://gtfs.org/documentation/schedule/reference/",
+                    source_url=GTFS_ACCESSIBILITY_SPEC,
                 )
             )
 
@@ -177,10 +155,7 @@ def run_access_checks(feed: GtfsFeed, config: AuditConfig) -> tuple[list[Finding
             )
             conflicts = merged[
                 (merged["wheelchair_accessible"] == "1")
-                & (
-                    merged["wheelchair_boarding_resolved"].isin(["not_accessible", "unknown"])
-                    | merged["wheelchair_boarding"].isin(["0", ""])
-                )
+                & merged["wheelchair_boarding_resolved"].isin(["not_accessible", "unknown"])
             ]
             if not conflicts.empty:
                 findings.append(

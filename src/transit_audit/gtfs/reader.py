@@ -44,14 +44,19 @@ def _read_csv_from_zip(archive: zipfile.ZipFile, member: str) -> pd.DataFrame:
         return pd.read_csv(handle, dtype=str, keep_default_na=False)
 
 
-def read_gtfs_zip(path: Path, limits: ZipLimits | None = None) -> GtfsFeed:
+def read_gtfs_zip(
+    path: Path,
+    limits: ZipLimits | None = None,
+    *,
+    only_tables: set[str] | None = None,
+) -> GtfsFeed:
     if not path.exists():
         raise FileNotFoundError(f"GTFS feed not found: {path}")
     if not zipfile.is_zipfile(path):
         raise ValueError(f"Not a valid ZIP archive: {path}")
 
     zip_limits = limits or DEFAULT_ZIP_LIMITS
-    tables: dict[str, pd.DataFrame] = {}
+    loaded: dict[str, pd.DataFrame] = {}
     with zipfile.ZipFile(path) as archive:
         all_members = [
             m for m in archive.namelist() if not m.endswith("/") and not m.startswith("__MACOSX")
@@ -74,18 +79,20 @@ def read_gtfs_zip(path: Path, limits: ZipLimits | None = None) -> GtfsFeed:
             if not member.lower().endswith(".txt"):
                 continue
             table_name = Path(member).name.replace(".txt", "")
+            if only_tables is not None and table_name not in only_tables:
+                continue
             try:
-                tables[table_name] = _read_csv_from_zip(archive, member)
+                loaded[table_name] = _read_csv_from_zip(archive, member)
             except Exception as exc:
                 raise ValueError(f"Failed to read {member}: {exc}") from exc
 
-        if "locations.geojson" in archive.namelist():
+        if only_tables is None and "locations.geojson" in archive.namelist():
             with archive.open("locations.geojson") as handle:
-                tables["locations_geojson"] = pd.DataFrame(
+                loaded["locations_geojson"] = pd.DataFrame(
                     [{"raw": handle.read().decode("utf-8", errors="replace")}]
                 )
 
-    return GtfsFeed(path=path, tables=tables)
+    return GtfsFeed(path=path, tables=loaded)
 
 
 def parse_hhmmss(value: str) -> int:

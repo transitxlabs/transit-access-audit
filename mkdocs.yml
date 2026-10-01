@@ -1,11 +1,15 @@
-site_name: Transit Access Audit
-site_description: Canadian GTFS audit toolkit documentation
-repo_url: https://github.com/transitxlabs/transit-access-audit
+site_name: transit-access-audit
+site_description: Canadian GTFS accessibility audit and routing bounds
+nav:
+  - Home: index.md
+  - Routing bounds: routing-bounds.md
+  - Methodology: methodology.md
+  - CLI: cli.md
+  - Results: results.md
+  - Technical report: technical-report.md
+  - API: api.md
 theme:
   name: material
-nav:
-  - Getting Started: index.md
-  - Methodology: methodology.md
-  - CLI reference: cli.md
-  - Result schema: schema.md
-docs_dir: docs
+markdown_extensions:
+  - admonition
+  - tables

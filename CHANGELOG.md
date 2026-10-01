@@ -1,6 +1,44 @@
 # Changelog
 
-## 0.1.0 — 2026-09-28
+## 0.3.0 - 2026-09-30
+
+Phase 2 correctness and evaluation fixes.
+
+### Routing bounds
+
+- Correct GTFS wheelchair semantics (`0`/empty = unknown, `1` = accessible, `2` = not accessible) with parent inheritance
+- Schedule-only baseline replaces duplicate exclude-unknown policy
+- Walking transfers between nearby stops with sensitivity analysis
+- Verification ranking by recomputed interval-width change (exact on fixtures)
+- Calgary and Edmonton evaluation feeds; TTC reported as null check
+- `RESULTS.md` generated from `scripts/run_bounds_evaluation.py`
+- MobilityData GTFS Validator baseline (CLI JAR in `vendor/`)
+
+### Engineering
+
+- Fix origin sampling when all stops are unknown
+- Validator project-root discovery for editable installs
+- Tracked evaluation artifacts under `docs/bounds_eval/`
+
+## 0.2.0 - 2026-09-30
+
+Flagship routing bounds release.
+
+### Routing bounds
+
+- Optimistic, pessimistic, and exclude-unknown wheelchair accessibility policies
+- Schedule-based reachability with transfer limits
+- Interval width metrics and verification target ranking
+- CLI command `transit-audit bounds`
+- Evaluation scripts for TTC merged GTFS (`scripts/fetch_gtfs.py`, `scripts/run_bounds_evaluation.py`)
+- `RESULTS.md`, technical report, and milestone reports (M0-M3)
+
+### Engineering
+
+- Selective GTFS table loading and evaluation ZIP limits for large feeds
+- Library coverage >=90% with routing test suite
+
+## 0.1.0 - 2026-09-28
 
 Initial public release.
 
@@ -32,5 +70,5 @@ Initial public release.
 - CLI `transit-audit` with `audit`, `validate`, `checks list`, and `report` commands
 - Optional MobilityData validator report ingestion
 - Versioned JSON results, accessible HTML report, prioritized backlog exports
-- Synthetic test fixtures, ≥90% coverage, ruff/mypy/pyright clean
+- Synthetic test fixtures, >=90% coverage, ruff/mypy/pyright clean
 - `pytest-cov` in dev extras for `pytest -q` in fresh environments

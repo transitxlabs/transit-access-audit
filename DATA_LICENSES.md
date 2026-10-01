@@ -10,13 +10,30 @@ Verified 2026-09-28 against official publisher pages.
 - Attribution text: *Data provided by BC Transit. Used under the BC Transit Open Data Terms of Use.*
 - Repository policy: do not commit raw feeds; use synthetic fixtures or maintainer-verified samples only.
 
+## City of Calgary (Calgary Transit GTFS)
+
+- Source: [Calgary Transit GTFS Schedule Data](https://data.calgary.ca/Transportation-Transit/Calgary-Transit-Scheduling-Data/npk7-z3bj) (download endpoint: `https://data.calgary.ca/download/npk7-z3bj/application/zip`)
+- Terms: [Open Government Licence - City of Calgary](https://data.calgary.ca/stories/s/u45n-7awa/)
+- Licence summary: use and redistribution permitted with attribution; derivation allowed subject to acknowledgement.
+- Attribution text: *Contains information licensed under the Open Government Licence – City of Calgary.*
+- Repository policy: derived aggregated results in `docs/bounds_eval/`; verified frozen input retained under `data/snapshots/sha256/`; working copy in `.cache/gtfs/`. Frozen snapshot SHA-256 recorded in `docs/bounds_eval/frozen_feed_manifests.json`.
+
+## City of Edmonton (Edmonton Transit GTFS)
+
+- Source: `https://gtfs.edmonton.ca/TMGTFSRealTimeWebService/GTFS/gtfs.zip` (via `scripts/fetch_gtfs.py edmonton`; dataset metadata: [Edmonton GTFS dataset](https://data.edmonton.ca/api/views/4fvt-p2se.json))
+- Terms: [Open Government Licence - Edmonton](https://data.edmonton.ca/stories/s/Open-Government-Licence-Edmonton/msh8-if28/)
+- Licence summary: use permitted under Edmonton Open Government Licence v1.0 (July 2022) with attribution.
+- Attribution text: *Contains information licensed under the Open Government Licence – City of Edmonton.*
+- Repository policy: derived aggregated results in `docs/bounds_eval/`; verified frozen input retained under `data/snapshots/sha256/`; working copy in `.cache/gtfs/`. Frozen snapshot SHA-256 recorded in `docs/bounds_eval/frozen_feed_manifests.json`.
+
 ## City of Toronto (TTC) GTFS
 
 - Source: [Merged GTFS TTC Routes and Schedules](https://open.toronto.ca/dataset/merged-gtfs-ttc-routes-and-schedules/)
+- Direct download (verified 2026-09-30): CKAN resource `completegtfs.zip` (~84 MB compressed)
 - Terms: [Open Government Licence – Toronto](https://open.toronto.ca/open-data-licence/)
 - Licence summary: worldwide, royalty-free, perpetual licence to copy, modify, publish, and distribute with attribution; no endorsement implied.
 - Attribution text: *Contains information licensed under the Open Government Licence – Toronto.*
-- Repository policy: derived aggregated results preferred for demos; no raw feed committed without maintainer verification.
+- Repository policy: derived aggregated results preferred for demos; digest-verified evaluated input retained under `data/snapshots/sha256/` with publisher licence and acknowledgement. Local evaluation cache: `.cache/gtfs/` (gitignored).
 
 ## TransLink GTFS
 
@@ -42,3 +59,7 @@ Verified 2026-09-28 against official publisher pages.
 ## Report attribution fields
 
 Configure publisher attributions in audit YAML under `data_attributions` (list of `publisher` and `text` keys). Generated HTML reports render these in the metrics section.
+
+## Retained evaluation snapshots
+
+Phase 5 retains only the three digest-verified evaluated GTFS snapshots under `data/snapshots/sha256/`. Each file has an adjacent acquisition and licence record, and its digest is required by `docs/bounds_eval/frozen_feed_manifests.json`. See [snapshot retrieval](data/snapshots/README.md). These bytes are distributable under the respective [Calgary terms (v2.1)](https://data.calgary.ca/stories/s/u45n-7awa/), [Edmonton terms (v1.0, July 2022)](https://data.edmonton.ca/stories/s/Open-Government-Licence-Edmonton/msh8-if28/) and [Toronto terms](https://open.toronto.ca/open-data-licence/) with the acknowledgements above. No publisher endorsement is claimed. Dataset-to-endpoint associations cite [Calgary metadata](https://data.calgary.ca/api/views/npk7-z3bj.json) and [Edmonton metadata](https://data.edmonton.ca/api/views/4fvt-p2se.json); these were verified in the independent review but could not be freshly fetched in this sandbox. Exact original acquisition timestamps are unavailable.

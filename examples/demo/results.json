@@ -33,15 +33,21 @@
     },
     {
       "denominator": 6,
-      "label": "Stops with known wheelchair_boarding",
+      "label": "Stops with known wheelchair_boarding (resolved)",
       "metadata": {
-        "breakdown": {
+        "inheritance_issues": [],
+        "raw_breakdown": {
           "accessible": 6
-        }
+        },
+        "raw_unknown_count": 0,
+        "resolved_breakdown": {
+          "accessible": 6
+        },
+        "resolved_unknown_count": 0
       },
       "metric_id": "ACCESS.STOP.WHEELCHAIR.KNOWN",
       "numerator": 6,
-      "source_url": "https://gtfs.org/documentation/schedule/reference/",
+      "source_url": "https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding",
       "unit": "stops",
       "value": 6
     },
@@ -51,7 +57,7 @@
       "metadata": {},
       "metric_id": "ACCESS.TRIP.WHEELCHAIR.KNOWN",
       "numerator": 2,
-      "source_url": "https://gtfs.org/documentation/schedule/reference/",
+      "source_url": "https://gtfs.org/documentation/schedule/reference/#stopstxt-wheelchair_boarding",
       "unit": "trips",
       "value": 2
     },
@@ -69,7 +75,12 @@
       "denominator": 1,
       "label": "Departures per hour at S1 (peak)",
       "metadata": {
-        "service_date": "synthetic",
+        "aggregation": "median",
+        "method": "active_service_trips_and_frequencies",
+        "reference_stop_ids": [
+          "S1"
+        ],
+        "service_date": "2024-06-03",
         "stop_id": "S1",
         "time_band": "peak"
       },
@@ -81,13 +92,20 @@
     },
     {
       "denominator": null,
-      "label": "Service span at S1",
+      "label": "Band-limited service span at S1 (peak)",
       "metadata": {
-        "first_departure": "07:00:00",
-        "last_departure": "07:40:00",
-        "stop_id": "S1"
+        "aggregation": "median",
+        "band_end": "09:00:00",
+        "band_start": "07:00:00",
+        "note": "First-to-last departure within the configured time band only.",
+        "reference_stop_ids": [
+          "S1"
+        ],
+        "service_date": "2024-06-03",
+        "stop_id": "S1",
+        "time_band": "peak"
       },
-      "metric_id": "SERVICE.SPAN",
+      "metric_id": "SERVICE.BAND_SPAN",
       "numerator": null,
       "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
       "unit": null,
@@ -97,6 +115,7 @@
       "denominator": 60,
       "label": "Maximum headway at S1",
       "metadata": {
+        "service_date": "2024-06-03",
         "stop_id": "S1",
         "time_band": "peak"
       },
@@ -110,6 +129,7 @@
       "denominator": null,
       "label": "Median headway at S1",
       "metadata": {
+        "service_date": "2024-06-03",
         "stop_id": "S1"
       },
       "metric_id": "SERVICE.MEDIAN_HEADWAY",
@@ -120,8 +140,28 @@
     },
     {
       "denominator": null,
+      "label": "Daily service span (first to last departure)",
+      "metadata": {
+        "aggregation": "median",
+        "first_departure": "07:00:00",
+        "method": "active_service_day_first_to_last",
+        "reference_stop_ids": [
+          "S1"
+        ],
+        "service_date": "2024-06-03"
+      },
+      "metric_id": "SERVICE.DAILY_SPAN",
+      "numerator": null,
+      "source_url": "https://nap.nationalacademies.org/catalog/24766/transit-capacity-and-quality-of-service-manual-third-edition",
+      "unit": null,
+      "value": "00:40:00"
+    },
+    {
+      "denominator": null,
       "label": "Distinct service patterns",
-      "metadata": {},
+      "metadata": {
+        "service_date": "2024-06-03"
+      },
       "metric_id": "SERVICE.DAYS_PER_WEEK",
       "numerator": null,
       "source_url": "https://gtfs.org/documentation/schedule/reference/",
@@ -132,72 +172,98 @@
       "denominator": 500.0,
       "label": "Population within 400 m of stops (proximity coverage)",
       "metadata": {
+        "assumption": "uniform_population_density_within_polygon",
         "crs_epsg": 3347,
+        "limit": "Descriptive proximity association; not walk accessibility or legal compliance.",
         "metric_type": "proximity_coverage",
         "note": "Proximity coverage, not walk accessibility.",
-        "threshold_m": 400
+        "population_method": "areal_weight",
+        "source_crs": "EPSG:4326",
+        "target_crs": "EPSG:3347",
+        "threshold_m": 400,
+        "weighting": "intersection_area_over_polygon_area"
       },
       "metric_id": "PROXIMITY.POPULATION_WITHIN_400M",
-      "numerator": 100.0,
+      "numerator": 43.6546,
       "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
       "unit": "percent",
-      "value": 20.0
+      "value": 8.7309
     },
     {
       "denominator": 500.0,
       "label": "Population within 500 m of stops (proximity coverage)",
       "metadata": {
+        "assumption": "uniform_population_density_within_polygon",
         "crs_epsg": 3347,
+        "limit": "Descriptive proximity association; not walk accessibility or legal compliance.",
         "metric_type": "proximity_coverage",
         "note": "Proximity coverage, not walk accessibility.",
-        "threshold_m": 500
+        "population_method": "areal_weight",
+        "source_crs": "EPSG:4326",
+        "target_crs": "EPSG:3347",
+        "threshold_m": 500,
+        "weighting": "intersection_area_over_polygon_area"
       },
       "metric_id": "PROXIMITY.POPULATION_WITHIN_500M",
-      "numerator": 100.0,
+      "numerator": 54.9212,
       "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
       "unit": "percent",
-      "value": 20.0
+      "value": 10.9842
     },
     {
       "denominator": 500.0,
       "label": "Population within 800 m of stops (proximity coverage)",
       "metadata": {
+        "assumption": "uniform_population_density_within_polygon",
         "crs_epsg": 3347,
+        "limit": "Descriptive proximity association; not walk accessibility or legal compliance.",
         "metric_type": "proximity_coverage",
         "note": "Proximity coverage, not walk accessibility.",
-        "threshold_m": 800
+        "population_method": "areal_weight",
+        "source_crs": "EPSG:4326",
+        "target_crs": "EPSG:3347",
+        "threshold_m": 800,
+        "weighting": "intersection_area_over_polygon_area"
       },
       "metric_id": "PROXIMITY.POPULATION_WITHIN_800M",
-      "numerator": 300.0,
+      "numerator": 89.8208,
       "source_url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310031401",
       "unit": "percent",
-      "value": 60.0
+      "value": 17.9642
     },
     {
-      "denominator": 66.66666666666666,
-      "label": "Coverage gap for low_income_proxy vs reference",
+      "denominator": 36.6141,
+      "label": "Descriptive coverage association for low_income_proxy vs reference",
       "metadata": {
+        "assumption": "uniform_population_density_within_polygon",
         "group": "low_income_proxy",
-        "policy_note": "Configurable policy threshold; not a statutory limit.",
+        "group_coverage_pct": 0.0,
+        "policy_note": "Descriptive association between group proximity coverage shares; not causal, not legal compliance, not a statutory limit.",
+        "population_method": "areal_weight",
         "reference": "reference",
-        "threshold_m": 500.0
+        "reference_coverage_pct": 36.6141,
+        "threshold_m": 500.0,
+        "weighting": "intersection_area_over_polygon_area"
       },
       "metric_id": "EQUITY.COVERAGE_GAP",
       "numerator": 0.0,
       "source_url": "https://www150.statcan.gc.ca/n1/pub/18-001-x/18-001-x2024005-eng.htm",
       "unit": "percentage_points",
-      "value": -66.6667
+      "value": -36.6141
     }
   ],
   "provenance": {
-    "census_sha256": "b207bd251f6c7b32143fc1825ea0c36b44e7e6e55d0ccb7e0f941df94818cdf3",
+    "census_sha256": "bd53d7970a376d69d47f81b11dea7f0eb456c615db8d494ebf7ecb6e154aaac4",
     "config_sha256": "210d8801d00a3663c1b93538322637bd790b715512ad00d31db77ee5cb69805e",
     "crs_epsg": 3347,
-    "executed_at": "2026-09-29T01:44:23.623742Z",
-    "extra": {},
-    "feed_sha256": "bbd62a3afff117eedab1759174fbe5fe66e933ef32aad7c68e850b5578d6c81e",
+    "executed_at": "2026-10-01T15:42:18.631896Z",
+    "extra": {
+      "census_source_crs": "EPSG:4326",
+      "population_method": "areal_weight"
+    },
+    "feed_sha256": "3bcafdf1263bdda9587de9294085dfe65512bcca3bc217c24ab4c5a7d672ee36",
     "tool_name": "transit-access-audit",
-    "tool_version": "0.1.0",
+    "tool_version": "0.3.0",
     "validator_name": null,
     "validator_version": null
   },
@@ -206,11 +272,11 @@
     "backlog_count": 0,
     "error_count": 0,
     "finding_count": 1,
-    "metric_count": 13,
+    "metric_count": 14,
     "warning_count": 0
   },
   "tool": {
     "name": "transit-access-audit",
-    "version": "0.1.0"
+    "version": "0.3.0"
   }
 }

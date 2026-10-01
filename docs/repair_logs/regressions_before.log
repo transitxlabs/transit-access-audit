@@ -1,0 +1,299 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: .
+configfile: pyproject.toml
+plugins: platformdirs-4.12.2, cov-7.1.0
+collected 18 items
+
+tests/test_hostile_routing_regressions.py FF..FFFFFFF.FFFFFF             [100%]
+
+=================================== FAILURES ===================================
+_____________ test_f1_transit_only_independent_oracle[optimistic] ______________
+
+policy = <UnknownPolicy.OPTIMISTIC: 'optimistic'>
+
+    @pytest.mark.parametrize('policy', list(UnknownPolicy))
+    def test_f1_transit_only_independent_oracle(policy):
+        feed = independent_feed([{'stop_id': s, 'wheelchair_boarding': '1'} for s in ['A', 'B']],
+            [{'trip_id': 'T', 'service_id': 's', 'wheelchair_accessible': '1'}],
+            trip_rows('T', ['A', 'B'], [30, 40]))
+        index = build_schedule_index(feed, date(2026, 9, 30), policy)
+>       assert set(index.trips) == {'T'}
+E       AssertionError: assert set() == {'T'}
+E         
+E         Extra items in the right set:
+E         'T'
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:38: AssertionError
+_____________ test_f1_transit_only_independent_oracle[pessimistic] _____________
+
+policy = <UnknownPolicy.PESSIMISTIC: 'pessimistic'>
+
+    @pytest.mark.parametrize('policy', list(UnknownPolicy))
+    def test_f1_transit_only_independent_oracle(policy):
+        feed = independent_feed([{'stop_id': s, 'wheelchair_boarding': '1'} for s in ['A', 'B']],
+            [{'trip_id': 'T', 'service_id': 's', 'wheelchair_accessible': '1'}],
+            trip_rows('T', ['A', 'B'], [30, 40]))
+        index = build_schedule_index(feed, date(2026, 9, 30), policy)
+>       assert set(index.trips) == {'T'}
+E       AssertionError: assert set() == {'T'}
+E         
+E         Extra items in the right set:
+E         'T'
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:38: AssertionError
+_______________ test_f2_metric_radius_matches_brute_force[51.0] ________________
+
+lat = 51.0
+
+    @pytest.mark.parametrize('lat', [43.7, 51.0, 53.5, 60.0, 70.0, 89.9])
+    def test_f2_metric_radius_matches_brute_force(lat):
+        rows = [{'stop_id': str(i), 'stop_lat': lat + (i % 3) * .001,
+            'stop_lon': -114 + (i // 3) * .002} for i in range(18)]
+        edges = build_walk_edges(pd.DataFrame(rows), speed_mps=1.4, radius_m=300)
+        expected = {(a['stop_id'], b['stop_id']) for a in rows for b in rows
+            if a != b and haversine_m(a['stop_lat'], a['stop_lon'], b['stop_lat'], b['stop_lon']) <= 300}
+>       assert {(s, t) for s, links in edges.items() for t, _ in links} == expected
+E       AssertionError: assert {('0', '1'), ...1', '0'), ...} == {('0', '1'), ...0', '6'), ...}
+E         
+E         Extra items in the right set:
+E         ('4', '10')
+E         ('2', '8')
+E         ('9', '3')
+E         ('7', '1')
+E         ('10', '4')...
+E         
+E         ...Full output truncated (8 lines hidden), use '-vv' to show
+
+tests/test_hostile_routing_regressions.py:50: AssertionError
+_______________ test_f2_metric_radius_matches_brute_force[53.5] ________________
+
+lat = 53.5
+
+    @pytest.mark.parametrize('lat', [43.7, 51.0, 53.5, 60.0, 70.0, 89.9])
+    def test_f2_metric_radius_matches_brute_force(lat):
+        rows = [{'stop_id': str(i), 'stop_lat': lat + (i % 3) * .001,
+            'stop_lon': -114 + (i // 3) * .002} for i in range(18)]
+        edges = build_walk_edges(pd.DataFrame(rows), speed_mps=1.4, radius_m=300)
+        expected = {(a['stop_id'], b['stop_id']) for a in rows for b in rows
+            if a != b and haversine_m(a['stop_lat'], a['stop_lon'], b['stop_lat'], b['stop_lon']) <= 300}
+>       assert {(s, t) for s, links in edges.items() for t, _ in links} == expected
+E       AssertionError: assert {('0', '1'), ...1', '0'), ...} == {('0', '1'), ...0', '6'), ...}
+E         
+E         Extra items in the right set:
+E         ('0', '7')
+E         ('8', '1')
+E         ('7', '2')
+E         ('2', '8')
+E         ('7', '0')...
+E         
+E         ...Full output truncated (24 lines hidden), use '-vv' to show
+
+tests/test_hostile_routing_regressions.py:50: AssertionError
+_______________ test_f2_metric_radius_matches_brute_force[60.0] ________________
+
+lat = 60.0
+
+    @pytest.mark.parametrize('lat', [43.7, 51.0, 53.5, 60.0, 70.0, 89.9])
+    def test_f2_metric_radius_matches_brute_force(lat):
+        rows = [{'stop_id': str(i), 'stop_lat': lat + (i % 3) * .001,
+            'stop_lon': -114 + (i // 3) * .002} for i in range(18)]
+        edges = build_walk_edges(pd.DataFrame(rows), speed_mps=1.4, radius_m=300)
+        expected = {(a['stop_id'], b['stop_id']) for a in rows for b in rows
+            if a != b and haversine_m(a['stop_lat'], a['stop_lon'], b['stop_lat'], b['stop_lon']) <= 300}
+>       assert {(s, t) for s, links in edges.items() for t, _ in links} == expected
+E       AssertionError: assert {('0', '1'), ...1', '0'), ...} == {('0', '1'), ...0', '6'), ...}
+E         
+E         Extra items in the right set:
+E         ('0', '7')
+E         ('8', '1')
+E         ('7', '2')
+E         ('2', '8')
+E         ('7', '0')...
+E         
+E         ...Full output truncated (24 lines hidden), use '-vv' to show
+
+tests/test_hostile_routing_regressions.py:50: AssertionError
+_______________ test_f2_metric_radius_matches_brute_force[70.0] ________________
+
+lat = 70.0
+
+    @pytest.mark.parametrize('lat', [43.7, 51.0, 53.5, 60.0, 70.0, 89.9])
+    def test_f2_metric_radius_matches_brute_force(lat):
+        rows = [{'stop_id': str(i), 'stop_lat': lat + (i % 3) * .001,
+            'stop_lon': -114 + (i // 3) * .002} for i in range(18)]
+        edges = build_walk_edges(pd.DataFrame(rows), speed_mps=1.4, radius_m=300)
+        expected = {(a['stop_id'], b['stop_id']) for a in rows for b in rows
+            if a != b and haversine_m(a['stop_lat'], a['stop_lon'], b['stop_lat'], b['stop_lon']) <= 300}
+>       assert {(s, t) for s, links in edges.items() for t, _ in links} == expected
+E       AssertionError: assert {('0', '1'), ...1', '0'), ...} == {('0', '1'), ...0', '5'), ...}
+E         
+E         Extra items in the right set:
+E         ('10', '0')
+E         ('5', '10')
+E         ('11', '2')
+E         ('1', '11')
+E         ('3', '9')...
+E         
+E         ...Full output truncated (74 lines hidden), use '-vv' to show
+
+tests/test_hostile_routing_regressions.py:50: AssertionError
+_______________ test_f2_metric_radius_matches_brute_force[89.9] ________________
+
+lat = 89.9
+
+    @pytest.mark.parametrize('lat', [43.7, 51.0, 53.5, 60.0, 70.0, 89.9])
+    def test_f2_metric_radius_matches_brute_force(lat):
+        rows = [{'stop_id': str(i), 'stop_lat': lat + (i % 3) * .001,
+            'stop_lon': -114 + (i // 3) * .002} for i in range(18)]
+        edges = build_walk_edges(pd.DataFrame(rows), speed_mps=1.4, radius_m=300)
+        expected = {(a['stop_id'], b['stop_id']) for a in rows for b in rows
+            if a != b and haversine_m(a['stop_lat'], a['stop_lon'], b['stop_lat'], b['stop_lon']) <= 300}
+>       assert {(s, t) for s, links in edges.items() for t, _ in links} == expected
+E       AssertionError: assert {('0', '1'), ...1', '0'), ...} == {('0', '1'), ...', '14'), ...}
+E         
+E         Extra items in the right set:
+E         ('15', '2')
+E         ('14', '1')
+E         ('10', '0')
+E         ('5', '10')
+E         ('11', '2')...
+E         
+E         ...Full output truncated (140 lines hidden), use '-vv' to show
+
+tests/test_hostile_routing_regressions.py:50: AssertionError
+_______________________ test_f2_inaccessible_walk_target _______________________
+
+    def test_f2_inaccessible_walk_target():
+        index = ScheduleIndex(UnknownPolicy.PESSIMISTIC, accessible_stop_ids={'A'}, walk_edges={'A': [('B', 60)]})
+>       assert not is_destination_reachable('A', 'B', 30600, 3600, 0, 0, index)[0]
+E       assert not True
+
+tests/test_hostile_routing_regressions.py:55: AssertionError
+_________________ test_f2_access_walk_then_bus_zero_transfers __________________
+
+    def test_f2_access_walk_then_bus_zero_transfers():
+        index = ScheduleIndex(UnknownPolicy.SCHEDULE_ONLY,
+            trips={'T': TripSchedule('T', [TripStopTime('B', 30720, 30720, 1), TripStopTime('C', 31320, 31320, 2)])},
+            boardings={'B': [('T', 0, 30720)]}, walk_edges={'A': [('B', 60)]})
+>       assert is_destination_reachable('A', 'C', 30600, 3600, 0, 300, index) == (True, 720)
+E       assert (False, None) == (True, 720)
+E         
+E         At index 0 diff: False != True
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:62: AssertionError
+__________________ test_f2_transfer_rounds_and_minimum[True] ___________________
+
+cross_stop = True
+
+    @pytest.mark.parametrize('cross_stop', [False, True])
+    def test_f2_transfer_rounds_and_minimum(cross_stop):
+        middle = 'X' if cross_stop else 'B'
+        index = ScheduleIndex(UnknownPolicy.SCHEDULE_ONLY,
+            trips={'T': TripSchedule('T', [TripStopTime('A', 30600, 30600, 1), TripStopTime('B', 30720, 30720, 2)]),
+                   'U': TripSchedule('U', [TripStopTime(middle, 31020, 31020, 1), TripStopTime('C', 31320, 31320, 2)])},
+            boardings={'A': [('T', 0, 30600)], middle: [('U', 0, 31020)]},
+            walk_edges={'B': [('X', 60)]} if cross_stop else {})
+        assert not is_destination_reachable('A', 'C', 30600, 3600, 0, 180, index)[0]
+>       assert is_destination_reachable('A', 'C', 30600, 3600, 1, 180, index) == (True, 720)
+E       assert (False, None) == (True, 720)
+E         
+E         At index 0 diff: False != True
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:74: AssertionError
+_____________________ test_f3_nearest_parent_and_override ______________________
+
+    def test_f3_nearest_parent_and_override():
+        stops = pd.DataFrame([{'stop_id': 'P', 'wheelchair_boarding': '2', 'parent_station': ''},
+            {'stop_id': 'M', 'wheelchair_boarding': '1', 'parent_station': 'P'},
+            {'stop_id': 'C', 'wheelchair_boarding': '0', 'parent_station': 'M'}])
+>       assert resolve_stop_boarding(stops)['C'] == '1'
+E       AssertionError: assert '2' == '1'
+E         
+E         - 1
+E         + 2
+
+tests/test_hostile_routing_regressions.py:82: AssertionError
+____________ test_f4_no_candidate_cutoff_and_exhaustive_equivalence ____________
+
+    def test_f4_no_candidate_cutoff_and_exhaustive_equivalence():
+        rows = [{'stop_id': f'D{i:02}', 'wheelchair_boarding': '0'} for i in range(26)]
+        rows += [{'stop_id': 'Z', 'wheelchair_boarding': '0'}, {'stop_id': 'B', 'wheelchair_boarding': '1'}]
+        feed = independent_feed(rows, [{'trip_id': 'dummy', 'service_id': 's', 'wheelchair_accessible': '2'}],
+            trip_rows('dummy', [f'D{i:02}' for i in range(26)], [30] * 26))
+        config = BoundsConfig(service_date=date(2026, 9, 30), departure_time='08:30:00', min_transfer_minutes=0)
+        pairs = [('Z', 'B')]
+        walk = {'Z': [('B', 60)]}
+        targets = rank_verification_targets(feed, config, pairs, walk_edges=walk)
+        exhaustive = {}
+        base = _pair_widths_for_overrides(feed, config, pairs, walk_edges=walk)
+        for row in rows[:-1]:
+            outcomes = [_pair_widths_for_overrides(feed, config, pairs,
+                stop_overrides={row['stop_id']: value}, walk_edges=walk) for value in ['1', '2']]
+            change = sum(base) - min(map(sum, outcomes))
+            if change:
+                exhaustive[row['stop_id']] = change
+>       assert {t.entity_id: t.interval_width_change for t in targets} == exhaustive == {'Z': 1.0}
+E       AssertionError: assert {} == {'Z': 1}
+E         
+E         Right contains 1 more item:
+E         {'Z': 1}
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:106: AssertionError
+_________________ test_f5_sampling_resolves_full_feed_parents __________________
+
+    def test_f5_sampling_resolves_full_feed_parents():
+        rows = [{'stop_id': 'P', 'wheelchair_boarding': '1', 'location_type': '1'}]
+        rows += [{'stop_id': f'C{i}', 'wheelchair_boarding': '0', 'parent_station': 'P', 'location_type': '0'} for i in range(8)]
+        rows += [{'stop_id': f'U{i}', 'wheelchair_boarding': '0', 'location_type': '0'} for i in range(8)]
+        feed = independent_feed(rows, [{'trip_id': 'T', 'service_id': 's'}], trip_rows('T', [r['stop_id'] for r in rows[1:]], [30] * 16))
+        chosen = sample_stop_ids(feed, 8, 42, prefer_unknown=True)
+>       assert sum(s.startswith('C') for s in chosen) == 4
+E       assert 6 == 4
+E        +  where 6 = sum(<generator object test_f5_sampling_resolves_full_feed_parents.<locals>.<genexpr> at 0x1061d7760>)
+
+tests/test_hostile_routing_regressions.py:115: AssertionError
+______________ test_f4_intermediate_trip_and_exhaustive_outcomes _______________
+
+    def test_f4_intermediate_trip_and_exhaustive_outcomes():
+        feed = independent_feed([{'stop_id': s, 'wheelchair_boarding': '1'} for s in 'ABCD'],
+            [{'trip_id': t, 'service_id': 's', 'wheelchair_accessible': '0' if t == 'U' else '1'} for t in 'TUV'],
+            trip_rows('T', ['A', 'B'], [30, 32]) + trip_rows('U', ['B', 'C'], [34, 36]) + trip_rows('V', ['C', 'D'], [38, 40]))
+        config = BoundsConfig(service_date=date(2026, 9, 30), departure_time='08:30:00', min_transfer_minutes=0)
+        targets = rank_verification_targets(feed, config, [('A', 'D')], walk_edges={})
+>       assert [(t.entity_id, t.interval_width_change) for t in targets] == [('U', 1.0)]
+E       AssertionError: assert [] == [('U', 1.0)]
+E         
+E         Right contains one more item: ('U', 1.0)
+E         Use -v to get more diff
+
+tests/test_hostile_routing_regressions.py:125: AssertionError
+___________ test_f5_crossed_bootstrap_preserves_strata_and_clusters ____________
+
+    def test_f5_crossed_bootstrap_preserves_strata_and_clusters():
+>       from transit_audit.routing.uncertainty import crossed_bootstrap_interval
+E       ModuleNotFoundError: No module named 'transit_audit.routing.uncertainty'
+
+tests/test_hostile_routing_regressions.py:131: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_hostile_routing_regressions.py::test_f1_transit_only_independent_oracle[optimistic]
+FAILED tests/test_hostile_routing_regressions.py::test_f1_transit_only_independent_oracle[pessimistic]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_metric_radius_matches_brute_force[51.0]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_metric_radius_matches_brute_force[53.5]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_metric_radius_matches_brute_force[60.0]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_metric_radius_matches_brute_force[70.0]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_metric_radius_matches_brute_force[89.9]
+FAILED tests/test_hostile_routing_regressions.py::test_f2_inaccessible_walk_target
+FAILED tests/test_hostile_routing_regressions.py::test_f2_access_walk_then_bus_zero_transfers
+FAILED tests/test_hostile_routing_regressions.py::test_f2_transfer_rounds_and_minimum[True]
+FAILED tests/test_hostile_routing_regressions.py::test_f3_nearest_parent_and_override
+FAILED tests/test_hostile_routing_regressions.py::test_f4_no_candidate_cutoff_and_exhaustive_equivalence
+FAILED tests/test_hostile_routing_regressions.py::test_f5_sampling_resolves_full_feed_parents
+FAILED tests/test_hostile_routing_regressions.py::test_f4_intermediate_trip_and_exhaustive_outcomes
+FAILED tests/test_hostile_routing_regressions.py::test_f5_crossed_bootstrap_preserves_strata_and_clusters
+========================= 15 failed, 3 passed in 0.87s =========================

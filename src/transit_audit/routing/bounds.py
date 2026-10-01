@@ -1,0 +1,530 @@
+"""Compute optimistic/pessimistic routing bounds and verification ranking."""
+
+from __future__ import annotations
+
+import statistics
+import time
+from pathlib import Path
+from typing import Any
+
+from transit_audit.gtfs.reader import GtfsFeed, parse_hhmmss, read_gtfs_zip
+from transit_audit.gtfs.zip_limits import EVALUATION_ZIP_LIMITS, ZipLimits
+from transit_audit.routing.accessibility import unknown_entities
+from transit_audit.routing.index import ScheduleIndex, build_schedule_index
+from transit_audit.routing.models import (
+    BoundsConfig,
+    BoundsResult,
+    OdPairResult,
+    PolicyReachabilitySummary,
+    UnknownPolicy,
+    VerificationTarget,
+)
+from transit_audit.routing.reachability import reachable_arrivals
+from transit_audit.routing.sample import sample_od_pairs, sample_stop_ids
+from transit_audit.routing.walking import build_walk_edges
+
+
+def _policy_summary(
+    od_pairs: list[OdPairResult],
+    policy: UnknownPolicy,
+    *,
+    optimistic: bool,
+) -> PolicyReachabilitySummary:
+    if optimistic:
+        reachable = [pair for pair in od_pairs if pair.optimistic_reachable]
+        travel_times = [
+            pair.optimistic_travel_seconds
+            for pair in reachable
+            if pair.optimistic_travel_seconds is not None
+        ]
+    else:
+        reachable = [pair for pair in od_pairs if pair.pessimistic_reachable]
+        travel_times = [
+            pair.pessimistic_travel_seconds
+            for pair in reachable
+            if pair.pessimistic_travel_seconds is not None
+        ]
+    mean_travel = statistics.mean(travel_times) if travel_times else None
+    return PolicyReachabilitySummary(
+        policy=policy,
+        reachable_destination_count=len(reachable),
+        mean_travel_seconds=mean_travel,
+    )
+
+
+def _evaluate_od_pairs(
+    od_pairs_raw: list[tuple[str, str]],
+    config: BoundsConfig,
+    departure_s: int,
+    max_travel_s: int,
+    min_transfer_s: int,
+    optimistic_index: ScheduleIndex,
+    pessimistic_index: ScheduleIndex,
+) -> list[OdPairResult]:
+    od_results: list[OdPairResult] = []
+    origin_arrivals = {origin: [reachable_arrivals(origin, departure_s, max_travel_s,
+        config.max_transfers, min_transfer_s, index) for index in (optimistic_index, pessimistic_index)]
+        for origin in dict.fromkeys(o for o, _ in od_pairs_raw)}
+    for origin, destination in od_pairs_raw:
+        opt_arrival = origin_arrivals[origin][0].get(destination)
+        pess_arrival = origin_arrivals[origin][1].get(destination)
+        opt_ok, pess_ok = opt_arrival is not None, pess_arrival is not None
+        opt_travel = opt_arrival - departure_s if opt_arrival is not None else None
+        pess_travel = pess_arrival - departure_s if pess_arrival is not None else None
+        width = int(opt_ok) - int(pess_ok)
+        od_results.append(
+            OdPairResult(
+                origin_stop_id=origin,
+                destination_stop_id=destination,
+                optimistic_reachable=opt_ok,
+                pessimistic_reachable=pess_ok,
+                interval_width=width,
+                optimistic_travel_seconds=opt_travel,
+                pessimistic_travel_seconds=pess_travel,
+            )
+        )
+    return od_results
+
+
+def _schedule_only_summary(
+    od_results: list[OdPairResult],
+    schedule_index: ScheduleIndex,
+    config: BoundsConfig,
+    departure_s: int,
+) -> PolicyReachabilitySummary:
+    max_travel_s = config.max_travel_minutes * 60
+    min_transfer_s = config.min_transfer_minutes * 60
+    reachable = 0
+    travel_times: list[int] = []
+    arrivals = {origin: reachable_arrivals(origin, departure_s, max_travel_s,
+        config.max_transfers, min_transfer_s, schedule_index)
+        for origin in dict.fromkeys(p.origin_stop_id for p in od_results)}
+    for pair in od_results:
+        arrival = arrivals[pair.origin_stop_id].get(pair.destination_stop_id)
+        if arrival is not None:
+            reachable += 1
+            travel_times.append(arrival - departure_s)
+    return PolicyReachabilitySummary(
+        policy=UnknownPolicy.SCHEDULE_ONLY,
+        reachable_destination_count=reachable,
+        mean_travel_seconds=statistics.mean(travel_times) if travel_times else None,
+    )
+
+
+def _pair_widths_for_overrides(
+    feed: GtfsFeed,
+    config: BoundsConfig,
+    od_pairs_raw: list[tuple[str, str]],
+    *,
+    stop_overrides: dict[str, str] | None = None,
+    trip_overrides: dict[str, str] | None = None,
+    inherit_from_parent: bool = True,
+    walk_edges: dict[str, list[tuple[str, int]]] | None = None,
+) -> list[int]:
+    departure_s = parse_hhmmss(config.departure_time)
+    max_travel_s = config.max_travel_minutes * 60
+    min_transfer_s = config.min_transfer_minutes * 60
+    optimistic_index = build_schedule_index(
+        feed,
+        config.service_date,
+        UnknownPolicy.OPTIMISTIC,
+        stop_overrides=stop_overrides,
+        trip_overrides=trip_overrides,
+        inherit_from_parent=inherit_from_parent,
+        walk_edges=walk_edges,
+    )
+    pessimistic_index = build_schedule_index(
+        feed,
+        config.service_date,
+        UnknownPolicy.PESSIMISTIC,
+        stop_overrides=stop_overrides,
+        trip_overrides=trip_overrides,
+        inherit_from_parent=inherit_from_parent,
+        walk_edges=walk_edges,
+    )
+    od_results = _evaluate_od_pairs(
+        od_pairs_raw,
+        config,
+        departure_s,
+        max_travel_s,
+        min_transfer_s,
+        optimistic_index,
+        pessimistic_index,
+    )
+    return [pair.interval_width for pair in od_results]
+
+
+def _mean_width_for_overrides(
+    feed: GtfsFeed,
+    config: BoundsConfig,
+    od_pairs_raw: list[tuple[str, str]],
+    *,
+    stop_overrides: dict[str, str] | None = None,
+    trip_overrides: dict[str, str] | None = None,
+    inherit_from_parent: bool = True,
+    walk_edges: dict[str, list[tuple[str, int]]] | None = None,
+) -> float:
+    widths = _pair_widths_for_overrides(
+        feed,
+        config,
+        od_pairs_raw,
+        stop_overrides=stop_overrides,
+        trip_overrides=trip_overrides,
+        inherit_from_parent=inherit_from_parent,
+        walk_edges=walk_edges,
+    )
+    return statistics.mean(widths) if widths else 0.0
+
+
+def _verification_change(
+    base_widths: list[int],
+    resolved_widths_if_accessible: list[int],
+    resolved_widths_if_not_accessible: list[int],
+    *,
+    total_pairs: int | None = None,
+) -> tuple[float, int]:
+    denominator = total_pairs or len(base_widths)
+    if not base_widths or denominator == 0:
+        return 0.0, 0
+    base_sum = sum(base_widths)
+    sum_if_accessible = sum(resolved_widths_if_accessible)
+    sum_if_not_accessible = sum(resolved_widths_if_not_accessible)
+    resolved_sum = min(sum_if_accessible, sum_if_not_accessible)
+    change = (base_sum - resolved_sum) / denominator
+    affected = sum(
+        1
+        for index, base in enumerate(base_widths)
+        if min(
+            resolved_widths_if_accessible[index],
+            resolved_widths_if_not_accessible[index],
+        )
+        < base
+    )
+    return change, affected
+
+
+def compute_bounds(
+    feed: GtfsFeed | Path,
+    config: BoundsConfig,
+    *,
+    zip_limits: ZipLimits | None = None,
+) -> BoundsResult:
+    """Compute accessibility routing bounds for a bounded OD sample."""
+    started = time.perf_counter()
+    if isinstance(feed, Path):
+        gtfs = read_gtfs_zip(
+            feed,
+            zip_limits or EVALUATION_ZIP_LIMITS,
+            only_tables={"stops", "trips", "stop_times", "calendar", "calendar_dates"},
+        )
+    else:
+        gtfs = feed
+
+    departure_s = parse_hhmmss(config.departure_time)
+    max_travel_s = config.max_travel_minutes * 60
+    min_transfer_s = config.min_transfer_minutes * 60
+    walk_edges = build_walk_edges(
+        gtfs.table("stops"),
+        speed_mps=config.walk_speed_mps,
+        radius_m=config.walk_radius_m,
+        active_stop_ids=set(gtfs.table("stop_times")["stop_id"].astype(str)),
+    )
+
+    optimistic_index = build_schedule_index(
+        gtfs,
+        config.service_date,
+        UnknownPolicy.OPTIMISTIC,
+        walk_edges=walk_edges,
+    )
+    pessimistic_index = build_schedule_index(
+        gtfs,
+        config.service_date,
+        UnknownPolicy.PESSIMISTIC,
+        walk_edges=walk_edges,
+    )
+    schedule_only_index = build_schedule_index(
+        gtfs,
+        config.service_date,
+        UnknownPolicy.SCHEDULE_ONLY,
+        walk_edges=walk_edges,
+    )
+
+    origins = sample_stop_ids(
+        gtfs,
+        config.origin_count,
+        config.random_seed,
+        prefer_unknown=True,
+    )
+    destinations = sample_stop_ids(
+        gtfs,
+        config.destination_count,
+        config.random_seed + 1,
+        prefer_unknown=False,
+    )
+    od_pairs_raw = sample_od_pairs(origins, destinations, config.random_seed + 2)
+
+    od_results = _evaluate_od_pairs(
+        od_pairs_raw,
+        config,
+        departure_s,
+        max_travel_s,
+        min_transfer_s,
+        optimistic_index,
+        pessimistic_index,
+    )
+
+    widths = [pair.interval_width for pair in od_results]
+    unknown_stops, unknown_trips = unknown_entities(gtfs.table("stops"), gtfs.table("trips"))
+    verification_targets: list[VerificationTarget] = []
+    ranking_stats: dict[str, Any] = {"ran": False}
+    if config.rank_verification:
+        verification_targets = rank_verification_targets(
+            gtfs,
+            config,
+            od_pairs_raw,
+            od_results=od_results,
+            base_mean_width=statistics.mean(widths) if widths else 0.0,
+            walk_edges=walk_edges,
+            stats=ranking_stats,
+        )
+
+    runtime = time.perf_counter() - started
+    feed_path = str(gtfs.path) if isinstance(feed, Path) else str(feed.path)
+
+    return BoundsResult(
+        feed_path=feed_path,
+        config=config,
+        origin_stop_ids=origins,
+        destination_stop_ids=destinations,
+        od_pairs=od_results,
+        optimistic_summary=_policy_summary(od_results, UnknownPolicy.OPTIMISTIC, optimistic=True),
+        pessimistic_summary=_policy_summary(
+            od_results, UnknownPolicy.PESSIMISTIC, optimistic=False
+        ),
+        schedule_only_summary=_schedule_only_summary(
+            od_results, schedule_only_index, config, departure_s
+        ),
+        mean_interval_width=statistics.mean(widths) if widths else 0.0,
+        median_interval_width=statistics.median(widths) if widths else 0.0,
+        verification_targets=verification_targets[: config.verification_rank_limit],
+        unknown_stop_count=len(unknown_stops),
+        unknown_trip_count=len(unknown_trips),
+        runtime_seconds=runtime,
+        metadata={
+            "ranking_runtime_seconds": ranking_stats.get("runtime_seconds", 0.0),
+            "ranking_positive_target_count": ranking_stats.get(
+                "positive_target_count", len(verification_targets)
+            ),
+            "ranking_candidates_total": ranking_stats.get("candidates_total", 0),
+            "ranking_candidates_evaluated": ranking_stats.get("candidates_evaluated", 0),
+            "ranking_candidates_skipped": ranking_stats.get("candidates_skipped", 0),
+            "ranking_ran": ranking_stats.get("ran", False),
+            "ranking_skipped_reason": ranking_stats.get("skipped_reason"),
+            "active_trip_count_optimistic": len(optimistic_index.trips),
+            "active_trip_count_pessimistic": len(pessimistic_index.trips),
+            "active_trip_count_schedule_only": len(schedule_only_index.trips),
+            "walk_edge_count": sum(len(items) for items in walk_edges.values()),
+        },
+    )
+
+
+def _ordered_unknown_candidates(
+    unknown_stops: list[str],
+    unknown_trips: list[str],
+    od_pairs_raw: list[tuple[str, str]],
+    stop_times: Any,
+) -> tuple[list[str], list[str]]:
+    sample_stops = {origin for origin, _ in od_pairs_raw} | {
+        destination for _, destination in od_pairs_raw
+    }
+    trip_ids: set[str] = set()
+    for _, row in stop_times.iterrows():
+        stop_id = str(row["stop_id"])
+        if stop_id in sample_stops:
+            trip_ids.add(str(row["trip_id"]))
+    related_stops: set[str] = set()
+    if trip_ids:
+        for _, row in stop_times.iterrows():
+            if str(row["trip_id"]) in trip_ids:
+                related_stops.add(str(row["stop_id"]))
+
+    def stop_key(stop_id: str) -> tuple[int, int, str]:
+        priority = 0
+        if stop_id in sample_stops:
+            priority = 0
+        elif stop_id in related_stops:
+            priority = 1
+        else:
+            priority = 2
+        return (priority, 0 if stop_id in unknown_stops else 1, stop_id)
+
+    ordered_stops = sorted(unknown_stops, key=stop_key)
+    ordered_trips = sorted(unknown_trips)
+    return ordered_stops, ordered_trips
+
+
+def rank_verification_targets(
+    feed: GtfsFeed,
+    config: BoundsConfig,
+    od_pairs_raw: list[tuple[str, str]],
+    *,
+    od_results: list[OdPairResult] | None = None,
+    base_mean_width: float | None = None,
+    walk_edges: dict[str, list[tuple[str, int]]] | None = None,
+    time_budget_seconds: float | None = None,
+    stats: dict[str, Any] | None = None,
+) -> list[VerificationTarget]:
+    """Rank unknown fields by exhaustive interval-width recomputation."""
+    del base_mean_width, od_results
+    started = time.perf_counter()
+    unknown_stops, unknown_trips = unknown_entities(feed.table("stops"), feed.table("trips"))
+    candidates_total = len(unknown_stops) + len(unknown_trips)
+    if stats is not None:
+        stats.update(
+            {
+                "ran": False,
+                "candidates_total": candidates_total,
+                "candidates_evaluated": 0,
+                "candidates_skipped": candidates_total,
+                "positive_target_count": 0,
+                "runtime_seconds": 0.0,
+                "skipped_reason": "no_unknown_fields",
+            }
+        )
+    if not unknown_stops and not unknown_trips:
+        return []
+
+    if walk_edges is None:
+        walk_edges = build_walk_edges(
+            feed.table("stops"),
+            speed_mps=config.walk_speed_mps,
+            radius_m=config.walk_radius_m,
+            active_stop_ids=set(feed.table("stop_times")["stop_id"].astype(str)),
+        )
+
+    ordered_stops, ordered_trips = _ordered_unknown_candidates(
+        unknown_stops,
+        unknown_trips,
+        od_pairs_raw,
+        feed.table("stop_times"),
+    )
+    base_widths = _pair_widths_for_overrides(feed, config, od_pairs_raw, walk_edges=walk_edges)
+    targets: list[VerificationTarget] = []
+    candidates_evaluated = 0
+
+    def budget_exceeded() -> bool:
+        return (
+            time_budget_seconds is not None
+            and (time.perf_counter() - started) >= time_budget_seconds
+        )
+
+    if stats is not None:
+        stats["skipped_reason"] = None
+
+    for stop_id in ordered_stops:
+        if budget_exceeded():
+            break
+        candidates_evaluated += 1
+        widths_if_accessible = _pair_widths_for_overrides(
+            feed,
+            config,
+            od_pairs_raw,
+            stop_overrides={stop_id: "1"},
+            walk_edges=walk_edges,
+        )
+        widths_if_not_accessible = _pair_widths_for_overrides(
+            feed,
+            config,
+            od_pairs_raw,
+            stop_overrides={stop_id: "2"},
+            walk_edges=walk_edges,
+        )
+        change, affected = _verification_change(
+            base_widths,
+            widths_if_accessible,
+            widths_if_not_accessible,
+            total_pairs=len(base_widths),
+        )
+        if change <= 0.0:
+            continue
+        targets.append(
+            VerificationTarget(
+                entity_type="stop",
+                entity_id=stop_id,
+                field="wheelchair_boarding",
+                interval_width_change=change,
+                affected_od_pairs=affected,
+                metadata={
+                    "mean_width_if_accessible": statistics.mean(widths_if_accessible),
+                    "mean_width_if_not_accessible": statistics.mean(widths_if_not_accessible),
+                },
+            )
+        )
+
+    for trip_id in ordered_trips:
+        if budget_exceeded():
+            break
+        candidates_evaluated += 1
+        widths_if_accessible = _pair_widths_for_overrides(
+            feed,
+            config,
+            od_pairs_raw,
+            trip_overrides={trip_id: "1"},
+            walk_edges=walk_edges,
+        )
+        widths_if_not_accessible = _pair_widths_for_overrides(
+            feed,
+            config,
+            od_pairs_raw,
+            trip_overrides={trip_id: "2"},
+            walk_edges=walk_edges,
+        )
+        change, affected = _verification_change(
+            base_widths,
+            widths_if_accessible,
+            widths_if_not_accessible,
+            total_pairs=len(base_widths),
+        )
+        if change <= 0.0:
+            continue
+        targets.append(
+            VerificationTarget(
+                entity_type="trip",
+                entity_id=trip_id,
+                field="wheelchair_accessible",
+                interval_width_change=change,
+                affected_od_pairs=affected,
+                metadata={
+                    "mean_width_if_accessible": statistics.mean(widths_if_accessible),
+                    "mean_width_if_not_accessible": statistics.mean(widths_if_not_accessible),
+                },
+            )
+        )
+
+    targets.sort(
+        key=lambda item: (item.interval_width_change, item.affected_od_pairs),
+        reverse=True,
+    )
+    runtime = time.perf_counter() - started
+    skipped = candidates_total - candidates_evaluated
+    skipped_reason = None
+    if skipped and time_budget_seconds is not None:
+        skipped_reason = "time_budget_exceeded"
+    if stats is not None:
+        stats.update(
+            {
+                "ran": True,
+                "candidates_total": candidates_total,
+                "candidates_evaluated": candidates_evaluated,
+                "candidates_skipped": skipped,
+                "positive_target_count": len(targets),
+                "runtime_seconds": runtime,
+                "skipped_reason": skipped_reason,
+                "time_budget_seconds": time_budget_seconds,
+            }
+        )
+    return targets
+
+
+def bounds_to_dict(result: BoundsResult) -> dict[str, Any]:
+    return result.model_dump(mode="json")

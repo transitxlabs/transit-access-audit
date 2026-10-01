@@ -1,0 +1,782 @@
+#!/usr/bin/env python3
+"""Run preregistered routing bounds evaluation and write RESULTS artifacts."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import statistics
+import subprocess
+import sys
+import time
+from datetime import date
+from pathlib import Path
+from typing import Any
+
+from transit_audit.gtfs.reader import read_gtfs_zip
+from transit_audit.gtfs.zip_limits import EVALUATION_ZIP_LIMITS
+from transit_audit.routing.accessibility import resolve_stop_boarding
+from transit_audit.routing.bounds import compute_bounds, rank_verification_targets
+from transit_audit.routing.models import BoundsConfig
+from transit_audit.routing.policy import wheelchair_category
+from transit_audit.routing.uncertainty import crossed_bootstrap_interval
+from transit_audit.validator.mobilitydata import (
+    ingest_validator_report,
+    java_available,
+    run_mobilitydata_validator,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_CACHE = ROOT / ".cache" / "gtfs"
+RESULTS_DIR = ROOT / "docs" / "bounds_eval"
+FIGURES_DIR = ROOT / "docs" / "figures"
+MEMORY_LIMIT_MB = 12_288
+FIXTURE_ZIP = ROOT / "tests" / "fixtures" / "bounds_route.zip"
+
+def _preregistration_hashes() -> tuple[str, str]:
+    archived = (ROOT / "docs" / "PREREGISTRATION.sha256").read_text(encoding="utf-8").strip()
+    prereg_text = (ROOT / "docs" / "PREREGISTRATION.md").read_text(encoding="utf-8")
+    marker = "## SHA-256 of this document"
+    if marker in prereg_text:
+        prereg_text = prereg_text.split(marker)[0].rstrip() + "\n"
+    phase2 = hashlib.sha256(prereg_text.encode()).hexdigest()
+    return archived, phase2
+
+
+def _enforce_preregistration_hash() -> tuple[str, str]:
+    archived, phase2 = _preregistration_hashes()
+    recorded: str | None = None
+    marker = "## SHA-256 of this document"
+    prereg_text = (ROOT / "docs" / "PREREGISTRATION.md").read_text(encoding="utf-8")
+    if marker in prereg_text:
+        for line in prereg_text.split(marker, 1)[1].splitlines():
+            candidate = line.strip().strip("`")
+            if len(candidate) == 64:
+                recorded = candidate
+                break
+    if recorded is not None and recorded != phase2:
+        raise RuntimeError(
+            "PREREGISTRATION.md body changed after freeze; record a dated AMENDMENT instead."
+        )
+    return archived, phase2
+
+
+def _relative_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return path.name
+
+
+def _read_manifest_digest(cache_dir: Path, feed_name: str) -> dict[str, str | int]:
+    manifest = cache_dir / f"{feed_name}_manifest.txt"
+    if not manifest.exists():
+        return {}
+    values: dict[str, str | int] = {}
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            values[key] = int(value) if key == "bytes" and value.isdigit() else value
+    return values
+
+
+def _verify_feed_snapshot(feed_path: Path, feed_name: str, cache_dir: Path) -> dict[str, Any]:
+    manifest = _read_manifest_digest(cache_dir, feed_name)
+    digest = hashlib.sha256()
+    with feed_path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    observed = digest.hexdigest()
+    expected = str(manifest.get("sha256", ""))
+    if expected and expected != observed:
+        raise RuntimeError(f"{feed_name} SHA-256 mismatch: expected {expected}, got {observed}")
+    return {
+        "relative_path": _relative_path(feed_path),
+        "sha256": observed,
+        "bytes": feed_path.stat().st_size,
+        "manifest_url": manifest.get("url"),
+        "licence_url": manifest.get("licence_url"),
+    }
+
+
+def _fixture_verification_table() -> list[dict[str, Any]]:
+    feed = read_gtfs_zip(FIXTURE_ZIP, EVALUATION_ZIP_LIMITS)
+    config = BoundsConfig(
+        service_date=date(2024, 6, 3),
+        departure_time="07:00:00",
+        max_travel_minutes=60,
+        max_transfers=1,
+        min_transfer_minutes=0,
+        origin_count=5,
+        destination_count=5,
+        random_seed=0,
+        rank_verification=True,
+    )
+    result = compute_bounds(feed, config)
+    pairs = [(pair.origin_stop_id, pair.destination_stop_id) for pair in result.od_pairs]
+    targets = rank_verification_targets(
+        feed,
+        config,
+        pairs,
+        od_results=result.od_pairs,
+        base_mean_width=result.mean_interval_width,
+    )
+    return [
+        {
+            "rank": index + 1,
+            "entity_type": target.entity_type,
+            "entity_id": target.entity_id,
+            "field": target.field,
+            "interval_width_change": target.interval_width_change,
+            "affected_od_pairs": target.affected_od_pairs,
+        }
+        for index, target in enumerate(targets[:5])
+    ]
+
+
+def _write_results_markdown(payload: dict[str, Any], *, json_path: Path) -> None:
+    archived, phase2 = _preregistration_hashes()
+    feeds = payload["feeds"]
+    primary_name = payload["primary_feed"]
+    primary = feeds[primary_name]
+    ci = primary["mean_interval_width_ci95"]
+    ttc = feeds.get("ttc")
+    edmonton = feeds.get("edmonton")
+    timing = payload.get("timing", {})
+    total_runtime = float(timing.get("wall_seconds", 0.0))
+
+    lines = [
+        "# Results: accessibility-unknown routing bounds (phase 2)",
+        "",
+        "Measured on Apple M3 Ultra (Mac Studio). Numbers produced by "
+        "`scripts/run_bounds_evaluation.py` unless noted.",
+        "",
+        f"Phase 2 preregistration SHA-256: `{phase2}` "
+        f"(archived phase 1 hash in `docs/PREREGISTRATION.sha256`: `{archived}`).",
+        "",
+        f"## Headline results ({primary_name.title()} GTFS, {primary['service_date']})",
+        "",
+        "| Metric | Value | 95% CI |",
+        "|--------|------:|--------|",
+        f"| Mean interval width | {primary['mean_interval_width']:.4f} | "
+        f"[{ci['lower']:.3f}, {ci['upper']:.3f}] |",
+        f"| Median interval width | {primary['median_interval_width']} | n/a |",
+        f"| Optimistic reachable OD pairs | {primary['optimistic_reachable_od_pairs']} | n/a |",
+        f"| Pessimistic reachable OD pairs | {primary['pessimistic_reachable_od_pairs']} | n/a |",
+        f"| Schedule-only reachable OD pairs | {primary['schedule_only_reachable_od_pairs']} | n/a |",
+        f"| Unknown stops | {primary['unknown_stop_count']:,} | n/a |",
+        f"| Unknown trips | {primary['unknown_trip_count']:,} | n/a |",
+        f"| Sampled OD pairs | {primary['od_pair_count']} | n/a |",
+        "",
+    ]
+    if primary_name == "calgary":
+        lines.append(
+            "Calgary lacks `wheelchair_boarding` and `wheelchair_accessible` columns, "
+            "so every stop and trip is treated as unknown under GTFS semantics."
+        )
+        lines.append("")
+
+    if ttc:
+        lines.extend(
+            [
+                "## Null check (TTC merged GTFS, "
+                f"{ttc['service_date']})",
+                "",
+                "| Metric | Value |",
+                "|--------|------:|",
+                f"| Mean interval width | {ttc['mean_interval_width']} |",
+                f"| Unknown stops (after inheritance) | {ttc['unknown_stop_count']} |",
+                f"| Unknown trips | {ttc['unknown_trip_count']} |",
+                f"| Optimistic / pessimistic reachable | "
+                f"{ttc['optimistic_reachable_od_pairs']} / {ttc['pessimistic_reachable_od_pairs']} |",
+                f"| Schedule-only reachable | {ttc['schedule_only_reachable_od_pairs']} |",
+                "",
+                "With corrected GTFS codes (`0` or empty = no information, `1` = accessible, "
+                "`2` = not accessible), the TTC feed is fully coded on trips and resolves to "
+                "no unknown stops after parent inheritance. Interval width is degenerate (null result).",
+                "",
+            ]
+        )
+
+    if edmonton:
+        lines.extend(
+            [
+                f"## Secondary feed (Edmonton Transit GTFS, {edmonton['service_date']})",
+                "",
+                "| Metric | Value |",
+                "|--------|------:|",
+                f"| Mean interval width | {edmonton['mean_interval_width']} |",
+                f"| Unknown stops | {edmonton['unknown_stop_count']} |",
+                f"| Unknown trips | {edmonton['unknown_trip_count']} |",
+                f"| Optimistic / pessimistic reachable | "
+                f"{edmonton['optimistic_reachable_od_pairs']} / {edmonton['pessimistic_reachable_od_pairs']} |",
+                f"| Schedule-only reachable | {edmonton['schedule_only_reachable_od_pairs']} |",
+                "",
+                "Partial unknown stop coding alone did not produce policy-differential reachability "
+                "on the preregistered sample when all trips are coded accessible.",
+                "",
+            ]
+        )
+
+    fixture_rows = payload.get("fixture_verification", [])
+    lines.extend(
+        [
+            "## Verification value (exact on fixture; change per verified field)",
+            "",
+            "Synthetic `bounds_route.zip` (exact recomputation on impacted pairs):",
+            "",
+            "| Rank | Entity | Field | Interval width change | Affected OD pairs |",
+            "|-----:|--------|-------|----------------------:|------------------:|",
+        ]
+    )
+    if fixture_rows:
+        for row in fixture_rows:
+            lines.append(
+                f"| {row['rank']} | {row['entity_type']} {row['entity_id']} | {row['field']} | "
+                f"{row['interval_width_change']:.3f} | {row['affected_od_pairs']} |"
+            )
+    else:
+        lines.append("| n/a | n/a | n/a | n/a | n/a |")
+    lines.extend(
+        [
+            "",
+            "Production-scale ranking on Calgary was not run in the batch evaluation because "
+            "full per-field recomputation exceeds the 12 GB memory/time budget; enable "
+            "`rank_verification=True` on smaller feeds or fixtures.",
+            "",
+        ]
+    )
+
+    if primary.get("transfer_sensitivity"):
+        lines.extend(
+            [
+                "## Sensitivity (Calgary primary feed)",
+                "",
+                "### Transfer time x travel budget",
+                "",
+                "| Min transfer (min) | Max travel (min) | Mean width | "
+                "Optimistic reachable | Schedule-only reachable |",
+                "|-------------------:|-----------------:|-----------:|"
+                "---------------------:|------------------------:|",
+            ]
+        )
+        for row in primary["transfer_sensitivity"]:
+            lines.append(
+                f"| {row['min_transfer_minutes']} | {row['max_travel_minutes']} | "
+                f"{row['mean_interval_width']:.4f} | {row['optimistic_reachable']} | "
+                f"{row['schedule_only_reachable']} |"
+            )
+        lines.append("")
+
+    if primary.get("walk_sensitivity"):
+        lines.extend(
+            [
+                "### Walking transfers (default 1.4 m/s, 300 m radius)",
+                "",
+                "| Walk speed (m/s) | Radius (m) | Mean width | Optimistic reachable |",
+                "|-----------------:|-----------:|-----------:|---------------------:|",
+            ]
+        )
+        for row in primary["walk_sensitivity"]:
+            lines.append(
+                f"| {row['walk_speed_mps']} | {int(row['walk_radius_m'])} | "
+                f"{row['mean_interval_width']:.4f} | {row['optimistic_reachable']} |"
+            )
+        lines.append("")
+
+    calgary_row = feeds.get("calgary", primary)
+    ttc_row = feeds.get("ttc", {})
+    lines.extend(
+        [
+            "## Baselines",
+            "",
+            "| Baseline | Calgary | TTC |",
+            "|----------|--------:|----:|",
+            f"| Completeness (unknown stops / trips) | "
+            f"{calgary_row.get('unknown_stop_count', 'n/a')} / {calgary_row.get('unknown_trip_count', 'n/a')} | "
+            f"{ttc_row.get('unknown_stop_count', 'n/a')} / {ttc_row.get('unknown_trip_count', 'n/a')} |",
+            f"| Optimistic-only reachable | {calgary_row.get('optimistic_reachable_od_pairs', 'n/a')} | "
+            f"{ttc_row.get('optimistic_reachable_od_pairs', 'n/a')} |",
+            f"| Pessimistic-only reachable | {calgary_row.get('pessimistic_reachable_od_pairs', 'n/a')} | "
+            f"{ttc_row.get('pessimistic_reachable_od_pairs', 'n/a')} |",
+            f"| Schedule-only (no wheelchair filter) | {calgary_row.get('schedule_only_reachable_od_pairs', 'n/a')} | "
+            f"{ttc_row.get('schedule_only_reachable_od_pairs', 'n/a')} |",
+            f"| Bounds pair (optimistic vs pessimistic) | {calgary_row.get('mean_interval_width', 'n/a')} | "
+            f"{ttc_row.get('mean_interval_width', 'n/a')} |",
+            "",
+            "The former exclude-unknown baseline was removed: under corrected GTFS semantics "
+            "it duplicated the pessimistic policy.",
+            "",
+            "## MobilityData GTFS Validator",
+            "",
+        ]
+    )
+    for feed_name, feed in feeds.items():
+        validator = feed.get("validator", {})
+        lines.append(
+            f"- **{feed_name}**: {validator.get('status', 'unknown')} "
+            f"({validator.get('notice_count', validator.get('reason', 'n/a'))} notices)"
+        )
+    lines.extend(
+        [
+            "",
+            "The validator catches schema and referential issues but does not quantify "
+            "accessibility-policy routing impact.",
+            "",
+            "## Runtime and memory",
+            "",
+            f"| Step | Duration |",
+            f"|------|----------|",
+            f"| Full evaluation script | {total_runtime:.0f} s |",
+        ]
+    )
+    for feed_name, feed in feeds.items():
+        lines.append(f"| {feed_name} primary bounds | {feed['runtime_seconds']:.0f} s |")
+    peak = max(
+        (feed.get("peak_memory_mb") or 0 for feed in feeds.values()),
+        default=0,
+    )
+    lines.extend(
+        [
+            "",
+            f"Peak memory (top MEM, best effort): {peak:.0f} MB"
+            if peak
+            else "Peak memory was not captured reliably (top unavailable).",
+            "",
+            "## Reproduce",
+            "",
+            "```bash",
+            "python -m pip install -e \".[geo,dev]\"",
+            "python scripts/fetch_gtfs.py calgary",
+            "python scripts/fetch_gtfs.py edmonton",
+            "python scripts/fetch_gtfs.py ttc",
+            "python scripts/run_bounds_evaluation.py --include-ttc --feeds calgary edmonton "
+            "--sensitivity --walk-sensitivity",
+            "transit-audit bounds tests/fixtures/bounds_route.zip \\",
+            "  --service-date 2024-06-03 --departure-time 07:00:00 --origin-count 5 --destination-count 5",
+            "```",
+            "",
+            "## Limitations",
+            "",
+            "- Schedule-based bounds, not observed AVL/realtime journeys "
+            "([Wessel et al. 2019](https://doi.org/10.5198/jtlu.2019.1502)).",
+            "- Walking transfers use geodesic distance at a fixed speed; no pedestrian network.",
+            "- Sampled OD pairs, not full population coverage.",
+            "- Timetable estimates differ from on-street accessibility compliance.",
+            "",
+            "## Deviations from phase 1 preregistration",
+            "",
+            "| Item | Deviation |",
+            "|------|-----------|",
+            "| Service date | Phase 1 listed 2026-10-06 (Monday); corrected to Tuesday dates per feed calendar |",
+            "| GTFS code mapping | Phase 1 treated `0` as not accessible; corrected to GTFS unknown semantics |",
+            "| Primary feeds | Added Calgary and Edmonton; TTC reported as null check only |",
+            "| Exclude baseline | Replaced with schedule-only baseline |",
+            "| Verification ranking | Exact on fixture; batch eval disabled ranking on large feeds for runtime |",
+            "",
+            "## Figure",
+            "",
+            "![Interval width histogram](docs/figures/interval_width_hist.png)",
+            "",
+            "Full machine-readable output: [evaluation.json](docs/bounds_eval/evaluation.json)",
+            "",
+        ]
+    )
+
+    root_results = ROOT / "RESULTS.md"
+    root_results.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    docs_results = ROOT / "docs" / "results.md"
+    docs_lines = [
+        line.replace("docs/figures/", "figures/").replace(
+            "docs/bounds_eval/evaluation.json", "bounds_eval/evaluation.json"
+        )
+        for line in lines
+    ]
+    docs_results.write_text("\n".join(docs_lines) + "\n", encoding="utf-8")
+
+
+FEED_SPECS: dict[str, dict[str, str]] = {
+    "ttc": {
+        "path": "ttc_completegtfs.zip",
+        "service_date": "2026-10-07",
+        "role": "null_fully_coded",
+    },
+    "calgary": {
+        "path": "calgary_transit_gtfs.zip",
+        "service_date": "2026-09-30",
+        "role": "primary_missing_columns",
+    },
+    "edmonton": {
+        "path": "edmonton_transit_gtfs.zip",
+        "service_date": "2026-09-30",
+        "role": "primary_partial_unknown_stops",
+    },
+}
+
+
+def _parse_top_memory_mb(output: str, pid: int) -> float | None:
+    for line in output.splitlines():
+        if str(pid) not in line:
+            continue
+        parts = line.split()
+        for token in reversed(parts):
+            if token.endswith(("M", "G", "K")):
+                value = token[:-1]
+                try:
+                    amount = float(value)
+                except ValueError:
+                    continue
+                if token.endswith("G"):
+                    return amount * 1024.0
+                if token.endswith("M"):
+                    return amount
+                if token.endswith("K"):
+                    return amount / 1024.0
+    return None
+
+
+def _peak_memory_mb() -> float | None:
+    pid = os.getpid()
+    try:
+        output = subprocess.check_output(
+            ["top", "-l", "1", "-pid", str(pid), "-stats", "pid,mem"],
+            text=True,
+            timeout=10,
+        )
+        peak = _parse_top_memory_mb(output, pid)
+        if peak is not None:
+            return peak
+    except (subprocess.SubprocessError, ValueError, OSError):
+        pass
+    try:
+        output = subprocess.check_output(
+            ["ps", "-o", "rss=", "-p", str(pid)],
+            text=True,
+            timeout=10,
+        )
+        return int(output.strip()) / 1024.0
+    except (subprocess.SubprocessError, ValueError, OSError):
+        return None
+
+
+def _enforce_memory_limit(label: str) -> float | None:
+    peak = _peak_memory_mb()
+    if peak is not None and peak > MEMORY_LIMIT_MB:
+        raise MemoryError(
+            f"{label} exceeded {MEMORY_LIMIT_MB} MB limit (observed {peak:.0f} MB)"
+        )
+    return peak
+
+
+def _bootstrap_interval(
+    od_pairs: list[tuple[str, str, float]],
+    origin_strata: dict[str, str],
+    *,
+    samples: int = 1000,
+    alpha: float = 0.05,
+) -> tuple[float, float]:
+    if not od_pairs:
+        return 0.0, 0.0
+    return crossed_bootstrap_interval(
+        od_pairs,
+        origin_strata,
+        samples=samples,
+        alpha=alpha,
+    )
+
+
+def _validator_summary(feed: Path, output_dir: Path) -> dict[str, Any]:
+    if not java_available():
+        return {"status": "skipped", "reason": "java_not_available"}
+    validator_dir = output_dir / "validator" / feed.stem
+    try:
+        report_path = run_mobilitydata_validator(feed, validator_dir, timeout_seconds=600)
+        findings, provenance = ingest_validator_report(report_path)
+    except (TimeoutError, RuntimeError, FileNotFoundError) as exc:
+        return {"status": "failed", "reason": str(exc)}
+
+    codes = sorted({finding.check_id for finding in findings})
+    errors = sum(1 for finding in findings if finding.severity.value == "error")
+    warnings = sum(1 for finding in findings if finding.severity.value == "warning")
+    return {
+        "status": "completed",
+        "validator_version": provenance.get("validator_version"),
+        "notice_count": len(findings),
+        "error_count": errors,
+        "warning_count": warnings,
+        "sample_codes": codes[:15],
+        "catches_accessibility_gaps": any(
+            "wheelchair" in finding.message.lower() for finding in findings
+        ),
+        "report_path": str(report_path),
+    }
+
+
+def _evaluate_feed(
+    feed: Path,
+    *,
+    feed_name: str,
+    service_date: date,
+    cache_dir: Path,
+    output_dir: Path,
+    sensitivity: bool,
+    walk_sensitivity: bool,
+) -> dict[str, Any]:
+    snapshot = _verify_feed_snapshot(feed, feed_name, cache_dir)
+    gtfs = read_gtfs_zip(
+        feed,
+        EVALUATION_ZIP_LIMITS,
+        only_tables={"stops", "trips", "stop_times", "calendar", "calendar_dates"},
+    )
+    base_config = BoundsConfig(
+        service_date=service_date,
+        departure_time="08:30:00",
+        max_travel_minutes=60,
+        max_transfers=2,
+        min_transfer_minutes=5,
+        origin_count=20,
+        destination_count=40,
+        random_seed=42,
+        verification_rank_limit=15,
+        walk_speed_mps=1.4,
+        walk_radius_m=300.0,
+        rank_verification=False,
+    )
+
+    started = time.perf_counter()
+    _enforce_memory_limit(f"{feed_name} pre-bounds")
+    base_result = compute_bounds(gtfs, base_config)
+    peak = _enforce_memory_limit(f"{feed_name} post-bounds")
+    runtime = time.perf_counter() - started
+
+    resolved_stops = resolve_stop_boarding(gtfs.table("stops"))
+    origin_strata = {
+        stop_id: "unknown" if wheelchair_category(raw) == "unknown" else "known"
+        for stop_id, raw in resolved_stops.items()
+    }
+    bootstrap_pairs = [
+        (pair.origin_stop_id, pair.destination_stop_id, float(pair.interval_width))
+        for pair in base_result.od_pairs
+    ]
+    width_ci = _bootstrap_interval(bootstrap_pairs, origin_strata)
+
+    transfer_sensitivity: list[dict[str, Any]] = []
+    if sensitivity:
+        for transfer_minutes in (3, 5, 10):
+            for travel_minutes in (45, 60, 90):
+                cfg = base_config.model_copy(
+                    update={
+                        "min_transfer_minutes": transfer_minutes,
+                        "max_travel_minutes": travel_minutes,
+                        "rank_verification": False,
+                    }
+                )
+                result = compute_bounds(gtfs, cfg)
+                _enforce_memory_limit(f"{feed_name} transfer sensitivity")
+                transfer_sensitivity.append(
+                    {
+                        "min_transfer_minutes": transfer_minutes,
+                        "max_travel_minutes": travel_minutes,
+                        "mean_interval_width": result.mean_interval_width,
+                        "optimistic_reachable": result.optimistic_summary.reachable_destination_count,
+                        "pessimistic_reachable": result.pessimistic_summary.reachable_destination_count,
+                        "schedule_only_reachable": (
+                            result.schedule_only_summary.reachable_destination_count
+                            if result.schedule_only_summary
+                            else None
+                        ),
+                        "runtime_seconds": result.runtime_seconds,
+                    }
+                )
+
+    walk_sensitivity_rows: list[dict[str, Any]] = []
+    if walk_sensitivity:
+        for speed in (1.0, 1.4, 1.8):
+            for radius in (200.0, 300.0, 500.0):
+                cfg = base_config.model_copy(
+                    update={
+                        "walk_speed_mps": speed,
+                        "walk_radius_m": radius,
+                        "rank_verification": False,
+                    }
+                )
+                result = compute_bounds(gtfs, cfg)
+                _enforce_memory_limit(f"{feed_name} walk sensitivity")
+                walk_sensitivity_rows.append(
+                    {
+                        "walk_speed_mps": speed,
+                        "walk_radius_m": radius,
+                        "mean_interval_width": result.mean_interval_width,
+                        "optimistic_reachable": result.optimistic_summary.reachable_destination_count,
+                        "schedule_only_reachable": (
+                            result.schedule_only_summary.reachable_destination_count
+                            if result.schedule_only_summary
+                            else None
+                        ),
+                    }
+                )
+
+    validator = _validator_summary(feed, output_dir)
+    if validator.get("report_path"):
+        validator["report_path"] = _relative_path(Path(str(validator["report_path"])))
+
+    return {
+        "feed_name": feed_name,
+        "feed_snapshot": snapshot,
+        "service_date": service_date.isoformat(),
+        "runtime_seconds": runtime,
+        "peak_memory_mb": peak,
+        "mean_interval_width": base_result.mean_interval_width,
+        "median_interval_width": base_result.median_interval_width,
+        "mean_interval_width_ci95": {"lower": width_ci[0], "upper": width_ci[1]},
+        "optimistic_reachable_od_pairs": base_result.optimistic_summary.reachable_destination_count,
+        "pessimistic_reachable_od_pairs": base_result.pessimistic_summary.reachable_destination_count,
+        "schedule_only_reachable_od_pairs": (
+            base_result.schedule_only_summary.reachable_destination_count
+            if base_result.schedule_only_summary
+            else None
+        ),
+        "unknown_stop_count": base_result.unknown_stop_count,
+        "unknown_trip_count": base_result.unknown_trip_count,
+        "od_pair_count": len(base_result.od_pairs),
+        "origin_stop_ids": base_result.origin_stop_ids,
+        "destination_stop_ids": base_result.destination_stop_ids,
+        "od_pairs": [pair.model_dump(mode="json") for pair in base_result.od_pairs],
+        "verification_targets": [
+            target.model_dump(mode="json") for target in base_result.verification_targets[:10]
+        ],
+        "transfer_sensitivity": transfer_sensitivity,
+        "walk_sensitivity": walk_sensitivity_rows,
+        "validator": validator,
+        "config": base_config.model_dump(mode="json"),
+        "metadata": base_result.metadata,
+    }
+
+
+def run_evaluation(
+    cache_dir: Path,
+    *,
+    output_dir: Path,
+    feeds: list[str],
+    sensitivity: bool,
+    walk_sensitivity: bool,
+) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    wall_started = time.perf_counter()
+    archived_sha, phase2_sha = _enforce_preregistration_hash()
+
+    feed_results: dict[str, Any] = {}
+    primary_name = next(name for name, spec in FEED_SPECS.items() if spec["role"].startswith("primary"))
+    for feed_name in feeds:
+        spec = FEED_SPECS[feed_name]
+        feed_path = cache_dir / spec["path"]
+        if not feed_path.exists():
+            raise FileNotFoundError(f"Feed not found: {feed_path}. Run scripts/fetch_gtfs.py {feed_name}")
+        feed_results[feed_name] = _evaluate_feed(
+            feed_path,
+            feed_name=feed_name,
+            service_date=date.fromisoformat(spec["service_date"]),
+            cache_dir=cache_dir,
+            output_dir=output_dir,
+            sensitivity=sensitivity and feed_name == primary_name,
+            walk_sensitivity=walk_sensitivity and feed_name == primary_name,
+        )
+
+    primary = feed_results[primary_name]
+    fixture_verification = _fixture_verification_table()
+    figure_path: str | None = None
+    try:
+        import matplotlib.pyplot as plt
+
+        primary_widths = [pair["interval_width"] for pair in primary["od_pairs"]]
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.hist(primary_widths, bins=[-0.5, 0.5, 1.5], color="#1f77b4", edgecolor="white")
+        ax.set_xlabel("Reachability interval width (optimistic minus pessimistic)")
+        ax.set_ylabel("OD pair count")
+        ax.set_title(f"{primary_name} bounds evaluation: interval width distribution")
+        ax.set_xticks([0, 1])
+        saved = FIGURES_DIR / "interval_width_hist.png"
+        fig.tight_layout()
+        fig.savefig(saved, dpi=150)
+        plt.close(fig)
+        figure_path = _relative_path(saved)
+    except ImportError:
+        figure_path = None
+
+    wall_seconds = time.perf_counter() - wall_started
+    peak = max((feed.get("peak_memory_mb") or 0 for feed in feed_results.values()), default=0.0)
+    payload: dict[str, Any] = {
+        "hardware_note": "Apple M3 Ultra, Mac Studio, local evaluation",
+        "preregistration_sha256_archived": archived_sha,
+        "preregistration_sha256": phase2_sha,
+        "feeds": feed_results,
+        "primary_feed": primary_name,
+        "fixture_verification": fixture_verification,
+        "figure_path": figure_path,
+        "timing": {
+            "wall_seconds": wall_seconds,
+            "peak_memory_mb": peak,
+        },
+        "headline": {
+            "feed": primary_name,
+            "mean_interval_width": primary["mean_interval_width"],
+            "mean_interval_width_ci95": primary["mean_interval_width_ci95"],
+            "optimistic_reachable_od_pairs": primary["optimistic_reachable_od_pairs"],
+            "pessimistic_reachable_od_pairs": primary["pessimistic_reachable_od_pairs"],
+        },
+    }
+
+    json_path = output_dir / "evaluation.json"
+    json_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    _write_results_markdown(payload, json_path=json_path)
+    return payload
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE)
+    parser.add_argument("--output-dir", type=Path, default=RESULTS_DIR)
+    parser.add_argument(
+        "--feeds",
+        nargs="+",
+        choices=sorted(FEED_SPECS),
+        default=["calgary", "edmonton"],
+    )
+    parser.add_argument("--include-ttc", action="store_true")
+    parser.add_argument("--sensitivity", action="store_true")
+    parser.add_argument("--walk-sensitivity", action="store_true")
+    args = parser.parse_args()
+
+    feeds = list(args.feeds)
+    if args.include_ttc and "ttc" not in feeds:
+        feeds.insert(0, "ttc")
+
+    try:
+        payload = run_evaluation(
+            args.cache_dir,
+            output_dir=args.output_dir,
+            feeds=feeds,
+            sensitivity=args.sensitivity,
+            walk_sensitivity=args.walk_sensitivity,
+        )
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    headline = payload["headline"]
+    print(
+        json.dumps(
+            {
+                "primary_feed": headline["feed"],
+                "mean_interval_width": headline["mean_interval_width"],
+            }
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

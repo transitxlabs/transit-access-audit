@@ -1,0 +1,26 @@
+{
+  "source": "https://github.com/transitxlabs/transit-access-audit/blob/main/scripts/build_fixtures.py",
+  "licence": "Apache-2.0",
+  "licence_url": "https://github.com/transitxlabs/transit-access-audit/blob/main/LICENSE",
+  "provenance": {
+    "tool_name": "transit-access-audit",
+    "tool_version": "0.3.0",
+    "executed_at": "2026-10-01T15:42:18.631896Z",
+    "feed_sha256": "3bcafdf1263bdda9587de9294085dfe65512bcca3bc217c24ab4c5a7d672ee36",
+    "config_sha256": "210d8801d00a3663c1b93538322637bd790b715512ad00d31db77ee5cb69805e",
+    "census_sha256": "bd53d7970a376d69d47f81b11dea7f0eb456c615db8d494ebf7ecb6e154aaac4",
+    "validator_name": null,
+    "validator_version": null,
+    "crs_epsg": 3347,
+    "extra": {
+      "census_source_crs": "EPSG:4326",
+      "population_method": "areal_weight"
+    }
+  },
+  "artifact_sha256": {
+    "results.json": "fb2ad485ba98f973dadd9846db8cb1b7645a2972294b4bd934f06cc94e45ea31",
+    "report.html": "65966f955235e9187ced532d5c9be6a7f7c85247c1d1e0db982991a0dcf49801",
+    "backlog.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "backlog.csv": "84b2f732ac2e16d3a163846adb14f7c80064f0afb9aba8c1d820baf43077c954"
+  }
+}

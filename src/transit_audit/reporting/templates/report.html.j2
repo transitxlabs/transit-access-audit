@@ -22,7 +22,7 @@
 <body>
   <a class="skip" href="#main">Skip to main content</a>
   <header>
-    <p><strong>Transit Access Audit</strong> — version {{ result.tool.version | escape_text }}</p>
+    <p><strong>Transit Access Audit</strong> version {{ result.tool.version | escape_text }}</p>
   </header>
   <main id="main">
     <h1>Transit Access Audit Report</h1>
@@ -122,7 +122,7 @@
               {% if metric.source_url | safe_url %}
               <a href="{{ metric.source_url | safe_url }}">{{ metric.source_url | escape_text }}</a>
               {% else %}
-              —
+              n/a
               {% endif %}
             </td>
           </tr>

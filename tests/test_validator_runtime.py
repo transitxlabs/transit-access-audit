@@ -25,8 +25,11 @@ def test_run_validator_requires_java(tmp_path: Path) -> None:
 
 
 def test_run_validator_missing_jar(tmp_path: Path) -> None:
+    empty_vendor = tmp_path / "vendor"
+    empty_vendor.mkdir()
     with (
         patch("transit_audit.validator.mobilitydata.java_available", return_value=True),
+        patch("transit_audit.validator.mobilitydata._project_root", return_value=tmp_path),
         pytest.raises(FileNotFoundError, match="Pinned validator JAR"),
     ):
         run_mobilitydata_validator(FIXTURES / "minimal_valid.zip", tmp_path)

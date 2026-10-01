@@ -14,6 +14,14 @@ class ZipLimits:
     max_compression_ratio: float = 100.0
 
 
+EVALUATION_ZIP_LIMITS = ZipLimits(
+    max_members=512,
+    max_uncompressed_bytes=1024 * 1024 * 1024,
+    max_member_bytes=512 * 1024 * 1024,
+    max_compression_ratio=200.0,
+)
+
+
 class ZipLimitExceededError(ValueError):
     """Raised when a ZIP archive exceeds configured safety limits."""
 

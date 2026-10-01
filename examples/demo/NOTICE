@@ -1,8 +1,9 @@
-Derived audit outputs generated from synthetic fixtures in tests/fixtures/.
-No agency GTFS or Statistics Canada boundaries are redistributed in this folder.
-Regenerate with:
+Derived audit outputs from synthetic fixtures only. Source and licence:
+https://github.com/transitxlabs/transit-access-audit/blob/main/scripts/build_fixtures.py
+https://github.com/transitxlabs/transit-access-audit/blob/main/LICENSE (Apache-2.0)
 
-transit-audit audit tests/fixtures/minimal_valid.zip \
-  --census tests/fixtures/census_tiny.gpkg \
-  --config examples/audit.yml \
-  --output-dir examples/demo/audit-output
+Regenerate the complete paired bundle:
+python scripts/regenerate_publication.py --demo-only
+
+results.json is the persisted input for report.html and the backlog exports.
+bundle_manifest.json records source, licence, provenance and artifact digests.

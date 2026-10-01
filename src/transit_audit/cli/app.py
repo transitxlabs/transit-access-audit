@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
@@ -17,6 +18,8 @@ from transit_audit.output import prepare_output_dir
 from transit_audit.reporting.backlog_export import write_backlog_csv, write_backlog_json
 from transit_audit.reporting.html import render_html_report
 from transit_audit.reporting.json_output import write_results_json
+from transit_audit.routing.bounds import bounds_to_dict, compute_bounds
+from transit_audit.routing.models import BoundsConfig
 from transit_audit.validator.mobilitydata import (
     ingest_validator_report,
     java_available,
@@ -151,6 +154,52 @@ def audit(
         raise
     except Exception as exc:
         typer.echo(f"Audit failed: {exc}", err=True)
+        raise typer.Exit(code=ExitCode.PROCESSING_ERROR.value) from exc
+
+
+@app.command()
+def bounds(
+    feed: Annotated[Path, typer.Argument(help="GTFS ZIP feed path")],
+    output: Annotated[Path, typer.Option("--output", help="JSON bounds output path")] = Path(
+        "bounds-results.json"
+    ),
+    service_date: Annotated[str, typer.Option(help="Service date YYYY-MM-DD")] = "2024-06-03",
+    departure_time: Annotated[str, typer.Option(help="Departure time HH:MM:SS")] = "08:00:00",
+    max_travel_minutes: Annotated[int, typer.Option(help="Maximum travel time in minutes")] = 60,
+    max_transfers: Annotated[int, typer.Option(help="Maximum transfers allowed")] = 2,
+    min_transfer_minutes: Annotated[int, typer.Option(help="Minimum transfer time")] = 5,
+    origin_count: Annotated[int, typer.Option(help="Number of sampled origins")] = 25,
+    destination_count: Annotated[int, typer.Option(help="Number of sampled destinations")] = 50,
+    random_seed: Annotated[int, typer.Option(help="Random seed for sampling")] = 42,
+) -> None:
+    """Compute optimistic/pessimistic accessibility routing bounds."""
+    try:
+        parsed_date = date.fromisoformat(service_date)
+        config = BoundsConfig(
+            service_date=parsed_date,
+            departure_time=departure_time,
+            max_travel_minutes=max_travel_minutes,
+            max_transfers=max_transfers,
+            min_transfer_minutes=min_transfer_minutes,
+            origin_count=origin_count,
+            destination_count=destination_count,
+            random_seed=random_seed,
+        )
+        result = compute_bounds(feed, config)
+        output.write_text(
+            json.dumps(bounds_to_dict(result), indent=2, default=str),
+            encoding="utf-8",
+        )
+        typer.echo(
+            f"Wrote {output} "
+            f"(mean interval width={result.mean_interval_width:.3f}, "
+            f"runtime={result.runtime_seconds:.2f}s)"
+        )
+    except ValueError as exc:
+        typer.echo(f"Invalid arguments: {exc}", err=True)
+        raise typer.Exit(code=ExitCode.INVALID_ARGS.value) from exc
+    except Exception as exc:
+        typer.echo(f"Bounds analysis failed: {exc}", err=True)
         raise typer.Exit(code=ExitCode.PROCESSING_ERROR.value) from exc
 
 

@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GTFS Schedule Validation Report</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8; width=device-width, initial-scale=1"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+      $(document).ready(function () {
+        $(document).tooltip();
+      });
+    </script>
+    <style>
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        min-width: 800px;
+        padding: 1em 2em;
+    }
+
+    .error:before {
+        content: "\1F534  ";
+    }
+
+    .warning:before {
+        content: "\1F7E0  ";
+    }
+
+    .info:before {
+        content: "\26AA  ";
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .version-update {
+        font-weight: bold;
+        color: red;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    table caption {
+        text-align: left;
+        margin: 0.5em 0;
+    }
+
+    table th {
+        text-align: left;
+        border-bottom: 2px solid #000;
+        padding: 0.5em;
+        white-space: nowrap;
+    }
+
+    table td {
+        border-bottom: 1px solid #ddd;
+        padding: 0.5em;
+    }
+
+    .desc-content {
+        padding: 0.5em;
+        border-bottom: 5px solid #000;
+        border-top: 5px solid #000;
+    }
+
+    .desc-content h3 {
+        margin-top: 0;
+    }
+
+    .summary {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .summary-row {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .summary-cell {
+        padding: 5px;
+        box-sizing: border-box;
+        flex: 1;
+    }
+
+    .summary h4 {
+        white-space: nowrap;
+    }
+
+    .summary dt,
+    .summary dd {
+        display: inline-block;
+    }
+
+    .summary dd {
+        font-weight: bold;
+        width: 130px;
+        margin-inline-start: 0;
+    }
+
+    .summary ul,
+    .summary ol {
+        padding-left: 20px;
+    }
+
+    .summary li {
+        padding-left: 0px;
+    }
+
+    hr {
+        border: none;
+        border-top: 2px solid #000;
+        margin-top: 5px;
+        margin-bottom: 15px;
+    }
+
+    .spec-feature {
+        background-color: #d4d4d4;
+        padding: 2px 5px;
+        margin-right: 2px;
+        margin-bottom: 2px;
+        text-align: center;
+    }
+
+    .tooltip {
+        text-decoration: none;
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .tooltip .tooltiptext {
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 100%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        max-width: 400px;
+        min-width: 100px;
+        width: max-content;
+        white-space: normal;
+    }
+
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Responsive behavior */
+    @media (max-width: 767px) {
+        .summary .summary_info,
+        .summary .summary_list {
+            flex-basis: 100%;
+        }
+    }
+
+    table.accordion > tbody > tr.notice td,
+    table.accordion > tbody > tr.view th {
+        cursor: auto;
+    }
+
+    table.accordion > tbody > tr.notice td:first-child,
+    table.accordion > tbody > tr.notice th:first-child {
+        position: relative;
+        padding-left: 20px;
+    }
+
+    table.accordion > tbody > tr.notice td:first-child:before,
+    table.accordion > tbody > tr.notice th:first-child:before {
+        position: absolute;
+        top: 50%;
+        left: 5px;
+        width: 9px;
+        height: 16px;
+        margin-top: -8px;
+        color: #000;
+        content: "+";
+    }
+
+    table.accordion > tbody > tr.notice.open td:first-child:before,
+    table.accordion > tbody > tr.notice.open th:first-child:before {
+        content: "\2013";
+    }
+
+    table.accordion > tbody > tr.notice:hover {
+        background: #ddd;
+    }
+
+    table.accordion > tbody > tr.notice.open {
+        background: #ddd;
+        color: black;
+    }
+
+    table.accordion > tbody > tr.description {
+        display: none;
+    }
+
+    table.accordion > tbody > tr.description.open {
+        display: table-row;
+    }
+
+    #gtfs-features-container > div {
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        flex-wrap: wrap;
+    }
+
+    .warning-display {
+        padding: 10px;
+        border: solid 2px orange;
+        border-radius: 11px;
+        width: fit-content;
+        font-weight: bold;
+    }
+</style>
+
+</head>
+<body>
+    <h1>GTFS Schedule Validation Report</h1>
+    <p>This report was generated by the <a href="https://github.com/MobilityData/gtfs-validator">Canonical GTFS Schedule
+        validator</a>,
+        <span>version 6.0.0</span> at <span>2026-10-01T09:28:42-07:00</span>,
+        <br/>
+        for the dataset
+        <span>.cache/gtfs/edmonton_transit_gtfs.zip</span><span>. No country code was provided.</span>
+        </br>
+        </p>
+
+    <p>Use this report alongside our <a href="https://gtfs-validator.mobilitydata.org/rules.html">documentation</a>.</p>
+
+    <div>
+        
+    </div>
+
+    
+
+    <h2>Summary</h2>
+
+    <div class="summary">
+        <div class="summary-row">
+            <div class="summary-cell summary_info">
+                <h4>Agencies included</h4>
+                <hr />
+                <ul>
+                    <li>
+                        <span>Edmonton Transit Service</span>
+                        <ul>
+                            <li><b>website: </b><a href="http://www.takeets.com">http://www.takeets.com</a></li>
+                            <li><b>phone number: </b><span >N/A</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>St. Albert Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="http://www.ridestat.ca">http://www.ridestat.ca</a></li>
+                            <li><b>phone number: </b><span >780-418-6060</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>Strathcona County Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="http://strathcona.ca/transit">http://strathcona.ca/transit</a></li>
+                            <li><b>phone number: </b><span >780-464-RIDE</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>Spruce Grove Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="https://www.sprucegrove.org/services/spruce-grove-transit">https://www.sprucegrove.org/services/spruce-grove-transit</a></li>
+                            <li><b>phone number: </b><span >N/A</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>Fort Saskatchewan Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="http://goforttransit.ca">http://goforttransit.ca</a></li>
+                            <li><b>phone number: </b><span >780-992-6218</span></li>
+                            <li><b>email: </b><span >transit@fortsask.ca</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>Beaumont Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="https://www.beaumont.ab.ca/476/Beaumont-Transit">https://www.beaumont.ab.ca/476/Beaumont-Transit</a></li>
+                            <li><b>phone number: </b><span >N/A</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span>Leduc Transit</span>
+                        <ul>
+                            <li><b>website: </b><a href="https://www.leduc.ca/residents/leduc-transit">https://www.leduc.ca/residents/leduc-transit</a></li>
+                            <li><b>phone number: </b><span >N/A</span></li>
+                            <li><b>email: </b><span >N/A</span></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="summary-cell summary_info">
+                <h4>Feed Info</h4>
+                <hr />
+                <dl>
+                    <div>
+                        <div>
+                            <dd >Publisher Name:</dd>
+                            <dt>
+                            
+                                
+                                <span>Edmonton Transit Service</span>
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Publisher URL:</dd>
+                            <dt>
+                            <span>
+                                <a href="http://www.takeets.com" target="_blank" >http://www.takeets.com</a>
+                            </span>
+                                
+                                
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Feed Email:</dd>
+                            <dt>
+                            
+                                
+                                <span>ets-gtfs@edmonton.ca</span>
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Feed Language:</dd>
+                            <dt>
+                            
+                                
+                                <span>English</span>
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Feed Start Date:</dd>
+                            <dt>
+                            
+                                
+                                <span>2026-09-29</span>
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Feed End Date:</dd>
+                            <dt>
+                            
+                                
+                                <span>2026-11-28</span>
+                                
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <dd >Service Window:</dd>
+                            <dt>
+                            
+                                
+                                <span>2026-09-29 to 2026-11-28</span>
+                                <span >
+                                     <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                        <span class="tooltiptext" style="transform: translateX(-100%)">The range of service dates covered by the feed, based on trips with an associated service_id in calendar.txt and/or calendar_dates.txt</span>
+                                    </a>
+                                </span>
+                            </dt>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            
+                            
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            
+                            
+                        </div>
+                    </div>
+                </dl>
+            </div>
+            <div class="summary-cell summary_list">
+                <h4>Files included</h4>
+                <hr />
+                <ol>
+                    <li>agency.txt</li>
+                    <li>areas.txt</li>
+                    <li>calendar_dates.txt</li>
+                    <li>fare_leg_rules.txt</li>
+                    <li>fare_media.txt</li>
+                    <li>fare_products.txt</li>
+                    <li>fare_transfer_rules.txt</li>
+                    <li>feed_info.txt</li>
+                    <li>levels.txt</li>
+                    <li>pathways.txt</li>
+                    <li>routes.txt</li>
+                    <li>shapes.txt</li>
+                    <li>stop_areas.txt</li>
+                    <li>stop_times.txt</li>
+                    <li>stops.txt</li>
+                    <li>transfers.txt</li>
+                    <li>trip_pattern.txt</li>
+                    <li>trips.txt</li>
+                </ol>
+            </div>
+            <div class="summary-cell summary_list">
+                <h4>Counts</h4>
+                <hr />
+                <ul>
+                    <li><span >Agencies: 7</span></li>
+                    <li><span >Blocks: 1403</span></li>
+                    <li><span >Routes: 241</span></li>
+                    <li><span >Shapes: 850</span></li>
+                    <li><span >Stops: 6787</span></li>
+                    <li><span >Trips: 85543</span></li>
+                </ul>
+            </div>
+            <div class="summary-cell summary_list" id="gtfs-features-container">
+                <h4>
+                    GTFS Features included
+                    <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                        <span class="tooltiptext" style="transform: translateX(-100%)">GTFS features provide a standardized vocabulary to define and describe features that are officially adopted in GTFS.</span>
+                    </a>
+                </h4>
+                <hr />
+                <div>
+                    <span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/pathways/#pathway-connections" target="_blank">Pathway Connections</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/pathways/#pathway-signs" target="_blank">Pathway Signs</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/pathways/#pathway-details" target="_blank">Pathway Details</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/pathways/#levels" target="_blank">Levels</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#transfers" target="_blank">Transfers</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#shapes" target="_blank">Shapes</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#feed-information" target="_blank">Feed Information</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/fares/#fare-products" target="_blank">Fare Products</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/fares/#fare-media" target="_blank">Fare Media</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/fares/#zone-based-fares" target="_blank">Zone-Based Fares</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/fares/#fare-transfers" target="_blank">Fare Transfers</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#route-colors" target="_blank">Route Colors</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#headsigns" target="_blank">Headsigns</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/accessibility/#stops-wheelchair-accessibility" target="_blank">Stops Wheelchair Accessibility</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/accessibility/#trips-wheelchair-accessibility" target="_blank">Trips Wheelchair Accessibility</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#bike-allowed" target="_blank">Bike Allowed</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/base_add-ons/#location-types" target="_blank">Location Types</a>
+                    </span><span class="spec-feature">
+                        <a href="https://gtfs.org/getting_started/features/pathways/#in-station-traversal-time" target="_blank">In-station Traversal Time</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <h2>Specification Compliance report</h2>
+
+    <h3><span>270</span> notices reported
+        (<span>0</span> errors,
+        <span>267</span> warnings,
+        <span>3</span> infos)
+    </h3>
+
+    <table class="accordion">
+        <thead>
+        <tr>
+            <th>Notice Code</th>
+            <th>Severity</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <span>
+            <span>
+                <tr class="notice">
+                    <td >route_color_contrast</td>
+                    <td class="warning" >WARNING</td>
+                    <td >3</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >route_color_contrast</h3>
+                            <p ><p>Insufficient route color contrast.</p>
+<p>A route's color and <code>route_text_color</code> should be contrasting.</p>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#route_color_contrast-rule">here</a>.
+                            </p>
+                             
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>routeId</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The id of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>csvRowNumber</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The row number of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>routeColor</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The faulty record&#39;s HTML route color.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>routeTextColor</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The faulty record&#39;s HTML route text color.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >&quot;404&quot;</td>
+                                    
+                                            <td >57</td>
+                                    
+                                            <td >&quot;#FDB525&quot;</td>
+                                    
+                                            <td >&quot;#FFFFFF&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >&quot;411&quot;</td>
+                                    
+                                            <td >58</td>
+                                    
+                                            <td >&quot;#80FF80&quot;</td>
+                                    
+                                            <td >&quot;#FFFFFF&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >&quot;441&quot;</td>
+                                    
+                                            <td >71</td>
+                                    
+                                            <td >&quot;#F8CE3D&quot;</td>
+                                    
+                                            <td >&quot;#FFFFFF&quot;</td>
+                                    
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span><span>
+                <tr class="notice">
+                    <td >route_long_name_contains_short_name</td>
+                    <td class="warning" >WARNING</td>
+                    <td >3</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >route_long_name_contains_short_name</h3>
+                            <p ><p>Long name should not contain short name for a single route.</p>
+<p>In routes.txt, <code>route_long_name</code> should not contain the value for <code>route_short_name</code>,
+because when both are provided, they are often combined by transit applications. Note that only
+one of the two fields is required. If there is no short name used for a route, use
+<code>route_long_name</code> only.</p>
+<p>Good examples:</p>
+<table>
+  <tr>
+    <th>route_short_name/route_long_name</th>
+    <th>Dataset</th>
+  </tr>
+  <tr>
+    <td>"N"/"Judah"</td>
+    <td><a href="https://www.sfmta.com/getting-around/transit/routes-stops/n-judah">Muni San Fransisco</a></td>
+  </tr>
+  <tr>
+    <td>"6"/"ML King Jr Blvd"</td>
+    <td><a href="https://trimet.org/schedules/r006.htm">Trimet Portland Streetcar</a></td>
+  </tr>
+  <tr>
+    <td>"55"/"Boulevard Saint Laurent"</td>
+    <td><a href="https://www.stm.info/en/info/networks/bus/local/line-55-north">STM Montreal</a></td>
+  </tr>
+  <tr>
+    <td>"1"/"Rangiora/Cashmere"</td>
+    <td><a href="https://www.metroinfo.co.nz/timetables/1-rangiora-cashmere/">Metro Christchurch</a></td>
+  </tr>
+</table>
+<p>Bad examples:</p>
+<table>
+  <tr>
+    <th>route_short_name/route_long_name</th>
+  </tr>
+  <tr>
+    <td>"604"/"604"</td>
+  </tr>
+  <tr>
+    <td>"14"/"Route 14"</td>
+  </tr>
+  <tr>
+    <td>"2"/"Route 2: Bellows Falls In-Town"</td>
+  </tr>
+</table>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#route_long_name_contains_short_name-rule">here</a>.
+                            </p>
+                             
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>routeId</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The id of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>csvRowNumber</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The row number of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>routeShortName</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The faulty record&#39;s `route_short_name`.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>routeLongName</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The faulty record&#39;s `route_long_name`.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >&quot;021R&quot;</td>
+                                    
+                                            <td >12</td>
+                                    
+                                            <td >&quot;Capital&quot;</td>
+                                    
+                                            <td >&quot;Capital Line&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >&quot;022R&quot;</td>
+                                    
+                                            <td >13</td>
+                                    
+                                            <td >&quot;Metro&quot;</td>
+                                    
+                                            <td >&quot;Metro Line&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >&quot;023R&quot;</td>
+                                    
+                                            <td >14</td>
+                                    
+                                            <td >&quot;Valley&quot;</td>
+                                    
+                                            <td >&quot;Valley Line&quot;</td>
+                                    
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span><span>
+                <tr class="notice">
+                    <td >stop_without_stop_time</td>
+                    <td class="warning" >WARNING</td>
+                    <td >261</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >stop_without_stop_time</h3>
+                            <p ><p>A stop in <code>stops.txt</code> is not referenced by any <code>stop_times.stop_id</code>.</p>
+<p>Such stops are not used by any trip and normally do not provide user value. This notice may
+indicate a typo in <code>stop_times.txt</code>.</p>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#stop_without_stop_time-rule">here</a>.
+                            </p>
+                             <p>Only the first 50 of <span>261</span> affected records are displayed below.</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>csvRowNumber</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The row number of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>stopId</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The id of the faulty stop.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>stopName</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The name of the faulty stop.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >6528</td>
+                                    
+                                            <td >&quot;ODT-1125&quot;</td>
+                                    
+                                            <td >&quot;65 Street &amp; 121 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6529</td>
+                                    
+                                            <td >&quot;ODT-1260&quot;</td>
+                                    
+                                            <td >&quot;61 Street &amp; 122 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6530</td>
+                                    
+                                            <td >&quot;ODT-1293&quot;</td>
+                                    
+                                            <td >&quot;110 Street &amp; 100 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6531</td>
+                                    
+                                            <td >&quot;ODT-1361&quot;</td>
+                                    
+                                            <td >&quot;61 Street &amp; 121 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6532</td>
+                                    
+                                            <td >&quot;ODT-1558&quot;</td>
+                                    
+                                            <td >&quot;65 Street &amp; 121 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6533</td>
+                                    
+                                            <td >&quot;ODT-1633&quot;</td>
+                                    
+                                            <td >&quot;68 Street &amp; 121 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6534</td>
+                                    
+                                            <td >&quot;ODT-1656&quot;</td>
+                                    
+                                            <td >&quot;127 Street &amp; 109A Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6535</td>
+                                    
+                                            <td >&quot;ODT-1733&quot;</td>
+                                    
+                                            <td >&quot;120 Street &amp; 103 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6536</td>
+                                    
+                                            <td >&quot;ODT-1970&quot;</td>
+                                    
+                                            <td >&quot;120 Street &amp; 104 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6537</td>
+                                    
+                                            <td >&quot;ODT-2023&quot;</td>
+                                    
+                                            <td >&quot;62 Street &amp; 92 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6538</td>
+                                    
+                                            <td >&quot;ODT-2040&quot;</td>
+                                    
+                                            <td >&quot;68A Street &amp; 86 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6539</td>
+                                    
+                                            <td >&quot;ODT-2048&quot;</td>
+                                    
+                                            <td >&quot;68A Street &amp; 86 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6540</td>
+                                    
+                                            <td >&quot;ODT-2062&quot;</td>
+                                    
+                                            <td >&quot;42 Street &amp; 69 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6541</td>
+                                    
+                                            <td >&quot;ODT-2075&quot;</td>
+                                    
+                                            <td >&quot;48 Street &amp; 93 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6542</td>
+                                    
+                                            <td >&quot;ODT-2126&quot;</td>
+                                    
+                                            <td >&quot;71 Street &amp; 86 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6543</td>
+                                    
+                                            <td >&quot;ODT-2138&quot;</td>
+                                    
+                                            <td >&quot;81 Street &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6544</td>
+                                    
+                                            <td >&quot;ODT-2152&quot;</td>
+                                    
+                                            <td >&quot;48 Street &amp; 92 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6545</td>
+                                    
+                                            <td >&quot;ODT-2199&quot;</td>
+                                    
+                                            <td >&quot;60 Street &amp; 85 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6546</td>
+                                    
+                                            <td >&quot;ODT-2223&quot;</td>
+                                    
+                                            <td >&quot;48 Street &amp; 92 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6547</td>
+                                    
+                                            <td >&quot;ODT-2234&quot;</td>
+                                    
+                                            <td >&quot;81 Street &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6548</td>
+                                    
+                                            <td >&quot;ODT-2320&quot;</td>
+                                    
+                                            <td >&quot;81 Street &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6549</td>
+                                    
+                                            <td >&quot;ODT-2397&quot;</td>
+                                    
+                                            <td >&quot;79 Street &amp; 73 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6550</td>
+                                    
+                                            <td >&quot;ODT-2441&quot;</td>
+                                    
+                                            <td >&quot;72 Street &amp; 86 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6551</td>
+                                    
+                                            <td >&quot;ODT-2458&quot;</td>
+                                    
+                                            <td >&quot;42 Street &amp; 69 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6552</td>
+                                    
+                                            <td >&quot;ODT-2467&quot;</td>
+                                    
+                                            <td >&quot;48 Street &amp; 93 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6553</td>
+                                    
+                                            <td >&quot;ODT-2478&quot;</td>
+                                    
+                                            <td >&quot;43A Street &amp; 68 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6554</td>
+                                    
+                                            <td >&quot;ODT-2510&quot;</td>
+                                    
+                                            <td >&quot;129 Street &amp; 63 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6555</td>
+                                    
+                                            <td >&quot;ODT-2514&quot;</td>
+                                    
+                                            <td >&quot;124 Street &amp; 49 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6556</td>
+                                    
+                                            <td >&quot;ODT-2548&quot;</td>
+                                    
+                                            <td >&quot;89 Street &amp; 78 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6557</td>
+                                    
+                                            <td >&quot;ODT-2554&quot;</td>
+                                    
+                                            <td >&quot;81 Street &amp; 101 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6558</td>
+                                    
+                                            <td >&quot;ODT-2555&quot;</td>
+                                    
+                                            <td >&quot;71 Street &amp; 80 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6559</td>
+                                    
+                                            <td >&quot;ODT-2557&quot;</td>
+                                    
+                                            <td >&quot;43A Street &amp; 68 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6560</td>
+                                    
+                                            <td >&quot;ODT-2559&quot;</td>
+                                    
+                                            <td >&quot;60 Street &amp; 85 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6561</td>
+                                    
+                                            <td >&quot;ODT-2582&quot;</td>
+                                    
+                                            <td >&quot;87 Street &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6562</td>
+                                    
+                                            <td >&quot;ODT-2804&quot;</td>
+                                    
+                                            <td >&quot;Girard Road &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6563</td>
+                                    
+                                            <td >&quot;ODT-2805&quot;</td>
+                                    
+                                            <td >&quot;Girard Road &amp; 76 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6564</td>
+                                    
+                                            <td >&quot;ODT-2922&quot;</td>
+                                    
+                                            <td >&quot;112 Street &amp; 57 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6565</td>
+                                    
+                                            <td >&quot;ODT-2938&quot;</td>
+                                    
+                                            <td >&quot;124 Street &amp; 49 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6566</td>
+                                    
+                                            <td >&quot;ODT-2958&quot;</td>
+                                    
+                                            <td >&quot;126 Street &amp; 63 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6567</td>
+                                    
+                                            <td >&quot;ODT-2963&quot;</td>
+                                    
+                                            <td >&quot;117 Street &amp; University Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6568</td>
+                                    
+                                            <td >&quot;ODT-2971&quot;</td>
+                                    
+                                            <td >&quot;117 Street &amp; University Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6569</td>
+                                    
+                                            <td >&quot;ODT-2972&quot;</td>
+                                    
+                                            <td >&quot;127 Street &amp; 62 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6570</td>
+                                    
+                                            <td >&quot;ODT-2993&quot;</td>
+                                    
+                                            <td >&quot;126 Street &amp; 63 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6571</td>
+                                    
+                                            <td >&quot;ODT-2995&quot;</td>
+                                    
+                                            <td >&quot;127 Street &amp; 62 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6572</td>
+                                    
+                                            <td >&quot;ODT-4031&quot;</td>
+                                    
+                                            <td >&quot;143 Street &amp; 56 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6573</td>
+                                    
+                                            <td >&quot;ODT-4033&quot;</td>
+                                    
+                                            <td >&quot;143 Street &amp; 60 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6574</td>
+                                    
+                                            <td >&quot;ODT-4034&quot;</td>
+                                    
+                                            <td >&quot;144 Street &amp; 60 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6575</td>
+                                    
+                                            <td >&quot;ODT-4036&quot;</td>
+                                    
+                                            <td >&quot;143 Street &amp; 56 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6576</td>
+                                    
+                                            <td >&quot;ODT-4038&quot;</td>
+                                    
+                                            <td >&quot;142 Street &amp; 50 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    <tr>
+                                    
+                                            <td >6577</td>
+                                    
+                                            <td >&quot;ODT-4041&quot;</td>
+                                    
+                                            <td >&quot;Whitemud Drive NB &amp; 53 Avenue&quot;</td>
+                                    
+                                    </tr>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span>
+        </span><span>
+            <span>
+                <tr class="notice">
+                    <td >unknown_column</td>
+                    <td class="info" >INFO</td>
+                    <td >1</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >unknown_column</h3>
+                            <p ><p>A column name is unknown.</p>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#unknown_column-rule">here</a>.
+                            </p>
+                             
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>filename</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The name of the faulty file.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>fieldName</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The name of the unknown column.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>index</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The index of the faulty column.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >&quot;stops.txt&quot;</td>
+                                    
+                                            <td >&quot;preferred&quot;</td>
+                                    
+                                            <td >13</td>
+                                    
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span><span>
+                <tr class="notice">
+                    <td >unknown_file</td>
+                    <td class="info" >INFO</td>
+                    <td >1</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >unknown_file</h3>
+                            <p ><p>A file is unknown.</p>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#unknown_file-rule">here</a>.
+                            </p>
+                             
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>filename</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The name of the unknown file.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >&quot;trip_pattern.txt&quot;</td>
+                                    
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span><span>
+                <tr class="notice">
+                    <td >unused_parent_station</td>
+                    <td class="info" >INFO</td>
+                    <td >1</td>
+                </tr>
+                <tr class="description">
+                    <td colspan="4">
+                        <div class="desc-content">
+                            <h3 >unused_parent_station</h3>
+                            <p ><p>Unused parent station.</p>
+<p>A stop has <code>location_type</code> STATION (1) but does not appear in any stop's <code>parent_station</code>.</p>
+</p>
+                            <p> You can see more about this notice <a
+                                    href="https://gtfs-validator.mobilitydata.org/rules.html#unused_parent_station-rule">here</a>.
+                            </p>
+                             
+                            <table>
+                                <thead>
+                                    <tr>
+                                        
+                                            <th>
+                                               <span>csvRowNumber</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The row number of the faulty record.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>stopId</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The id of the faulty stop.</span>
+                                                </a>
+                                            </th>
+                                        
+                                            <th>
+                                               <span>stopName</span>
+                                                <a href="#" class="tooltip" onclick="event.preventDefault();"><span>(?)</span>
+                                                    <span class="tooltiptext">The name of the faulty stop.</span>
+                                                </a>
+                                            </th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                    
+                                            <td >6444</td>
+                                    
+                                            <td >&quot;QSGT019&quot;</td>
+                                    
+                                            <td >&quot;Southgate TC Temp LRT Rep SB&quot;</td>
+                                    
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </span>
+        </span>
+        </tbody>
+    </table>
+    <br>
+    <footer class="footer text-center text-muted mt-5">
+        Made with ♥ by <a href="https://mobilitydata.org/">MobilityData</a>
+    </footer>
+</body>
+    <script>
+        $(function () {
+            $(".accordion tr.notice").on("click", function () {
+                $(this).toggleClass("open").next(".description").toggleClass("open")
+            })
+        });
+    </script>
+
+</html>
+

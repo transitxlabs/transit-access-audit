@@ -1,0 +1,17 @@
+{
+  "filename": "ttc_completegtfs.zip",
+  "sha256": "5e0191d59cb991b6c88ba9c1a5f2ca93a5a064a4d258dbc7ba93801d15f3dfca",
+  "bytes": 84337545,
+  "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/b811ead4-6eaf-4adb-8408-d389fb5a069c/resource/c920e221-7a1c-488b-8c5b-6d8cd4e85eaf/download/completegtfs.zip",
+  "licence_url": "https://open.toronto.ca/open-data-licence/",
+  "attribution": "Contains information licensed under the Open Government Licence – Toronto.",
+  "dataset_url": "https://open.toronto.ca/dataset/merged-gtfs-ttc-routes-and-schedules/",
+  "licence_version": "1.0",
+  "snapshot_path": "data/snapshots/sha256/5e0191d59cb991b6c88ba9c1a5f2ca93a5a064a4d258dbc7ba93801d15f3dfca.zip",
+  "feed": "ttc",
+  "acquisition_date": "2026-09-30",
+  "acquisition_date_status": "historical repository record; exact timestamp unavailable",
+  "snapshot_verified_date": "2026-10-01",
+  "endpoint_association_source": "https://open.toronto.ca/dataset/merged-gtfs-ttc-routes-and-schedules/",
+  "endpoint_association_status": "Publisher metadata cited in the local independent review; not freshly retrievable in this sandbox."
+}

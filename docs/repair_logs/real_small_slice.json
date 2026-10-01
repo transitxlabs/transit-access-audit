@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.1",
+  "feed_path": ".cache/gtfs/calgary_transit_gtfs.zip",
+  "config": {
+    "service_date": "2026-09-30",
+    "departure_time": "08:00:00",
+    "max_travel_minutes": 60,
+    "max_transfers": 2,
+    "min_transfer_minutes": 5,
+    "origin_count": 2,
+    "destination_count": 3,
+    "random_seed": 42,
+    "verification_rank_limit": 25,
+    "walk_speed_mps": 1.4,
+    "walk_radius_m": 300.0,
+    "rank_verification": false
+  },
+  "origin_stop_ids": [
+    "3406",
+    "8744"
+  ],
+  "destination_stop_ids": [
+    "2294",
+    "5253",
+    "9284"
+  ],
+  "od_pairs": [
+    {
+      "origin_stop_id": "3406",
+      "destination_stop_id": "2294",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 3492,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "3406",
+      "destination_stop_id": "5253",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 2010,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "3406",
+      "destination_stop_id": "9284",
+      "optimistic_reachable": false,
+      "pessimistic_reachable": false,
+      "interval_width": 0,
+      "optimistic_travel_seconds": null,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "8744",
+      "destination_stop_id": "2294",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 3492,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "8744",
+      "destination_stop_id": "5253",
+      "optimistic_reachable": true,
+      "pessimistic_reachable": false,
+      "interval_width": 1,
+      "optimistic_travel_seconds": 678,
+      "pessimistic_travel_seconds": null
+    },
+    {
+      "origin_stop_id": "8744",
+      "destination_stop_id": "9284",
+      "optimistic_reachable": false,
+      "pessimistic_reachable": false,
+      "interval_width": 0,
+      "optimistic_travel_seconds": null,
+      "pessimistic_travel_seconds": null
+    }
+  ],
+  "optimistic_summary": {
+    "policy": "optimistic",
+    "reachable_destination_count": 4,
+    "mean_travel_seconds": 2418.0
+  },
+  "pessimistic_summary": {
+    "policy": "pessimistic",
+    "reachable_destination_count": 0,
+    "mean_travel_seconds": null
+  },
+  "schedule_only_summary": {
+    "policy": "schedule_only",
+    "reachable_destination_count": 4,
+    "mean_travel_seconds": 2418.0
+  },
+  "mean_interval_width": 0.6666666666666666,
+  "median_interval_width": 1.0,
+  "verification_targets": [],
+  "unknown_stop_count": 6220,
+  "unknown_trip_count": 62862,
+  "runtime_seconds": 11.588105500002712,
+  "metadata": {
+    "ranking_runtime_seconds": 0.12111108300086926,
+    "ranking_positive_target_count": 0,
+    "active_trip_count_optimistic": 7926,
+    "active_trip_count_pessimistic": 0,
+    "active_trip_count_schedule_only": 7926,
+    "walk_edge_count": 32816
+  }
+}

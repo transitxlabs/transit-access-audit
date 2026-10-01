@@ -1,0 +1,86 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: .
+configfile: pyproject.toml
+testpaths: tests
+plugins: platformdirs-4.12.2, cov-7.1.0
+collected 137 items / 1 deselected / 136 selected
+
+tests/test_access_checks.py ...                                          [  2%]
+tests/test_backlog.py ..                                                 [  3%]
+tests/test_census_edges.py ..                                            [  5%]
+tests/test_cli.py .....                                                  [  8%]
+tests/test_config_models.py ......                                       [ 13%]
+tests/test_flex.py ..                                                    [ 14%]
+tests/test_gtfs_checks.py ..                                             [ 16%]
+tests/test_gtfs_reader.py ...                                            [ 18%]
+tests/test_hashing_security_extra.py ...                                 [ 20%]
+tests/test_hostile_routing_regressions.py ..................             [ 33%]
+tests/test_html_invalid_url.py .                                         [ 34%]
+tests/test_output.py ..                                                  [ 36%]
+tests/test_phase3_fixes.py ........................                      [ 53%]
+tests/test_proximity_equity.py .....                                     [ 57%]
+tests/test_reader_edges.py .....                                         [ 61%]
+tests/test_reporting_exports.py .                                        [ 61%]
+tests/test_routing_accessibility.py .....                                [ 65%]
+tests/test_routing_bounds.py .......                                     [ 70%]
+tests/test_routing_extra.py ............                                 [ 79%]
+tests/test_routing_reachability_walk.py .                                [ 80%]
+tests/test_routing_walking.py ...                                        [ 82%]
+tests/test_security_extra.py .                                           [ 83%]
+tests/test_security_reporting.py ....                                    [ 86%]
+tests/test_service_calendar.py ............                              [ 94%]
+tests/test_validator.py .                                                [ 95%]
+tests/test_validator_runtime.py ......                                   [100%]
+
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.11.15-final-0 _______________
+
+Name                                            Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------
+src/transit_audit/__init__.py                       3      0      0      0   100%
+src/transit_audit/checks/__init__.py                2      0      0      0   100%
+src/transit_audit/checks/access.py                159     15     86     18    87%   29, 45-46, 68->116, 116->135, 118, 135->178, 137->178, 178->213, 223, 246, 248, 252, 254, 286, 326-327, 330, 333, 341
+src/transit_audit/checks/flex.py                   27      2     12      3    87%   17, 39->51, 42
+src/transit_audit/checks/gtfs.py                   31      0     18      4    92%   49->65, 52->65, 65->78, 78->90
+src/transit_audit/checks/registry.py               20      0      2      0   100%
+src/transit_audit/checks/service.py                96      8     60     20    82%   21, 23, 25, 27, 37, 50, 69, 75, 77->82, 82->85, 95->118, 97->118, 118->140, 120->140, 142->160, 162->57, 177->220, 185->220, 220->234, 222->234
+src/transit_audit/config.py                        70      2     12      2    95%   60, 68
+src/transit_audit/engine.py                        48      0     10      0   100%
+src/transit_audit/findings/__init__.py              2      0      0      0   100%
+src/transit_audit/findings/backlog.py              34      1     16      1    96%   27
+src/transit_audit/geo/__init__.py                   2      0      0      0   100%
+src/transit_audit/geo/census.py                    69      4     22      4    91%   51, 68, 100, 103
+src/transit_audit/gtfs/__init__.py                  2      0      0      0   100%
+src/transit_audit/gtfs/reader.py                   74      4     28      2    94%   38, 86-87, 108
+src/transit_audit/gtfs/service_calendar.py        116     15     62     15    82%   13, 46, 47->41, 57, 62->55, 110, 117, 121-131, 135->137, 138, 155, 158->162, 163-164, 169->176, 184, 186
+src/transit_audit/gtfs/zip_limits.py               25      1     10      2    91%   46, 51->59
+src/transit_audit/hashing.py                       11      0      2      0   100%
+src/transit_audit/metrics/__init__.py               3      0      0      0   100%
+src/transit_audit/metrics/equity.py                46      3     20      3    91%   22, 48, 107
+src/transit_audit/metrics/proximity.py             19      1      6      1    92%   25
+src/transit_audit/models.py                        72      1      2      1    97%   91
+src/transit_audit/output.py                        30      0     12      1    98%   41->55
+src/transit_audit/reporting/__init__.py             4      0      0      0   100%
+src/transit_audit/reporting/backlog_export.py      24      0      6      0   100%
+src/transit_audit/reporting/html.py                21      1      2      1    91%   17
+src/transit_audit/reporting/json_output.py          8      0      0      0   100%
+src/transit_audit/routing/__init__.py               3      0      0      0   100%
+src/transit_audit/routing/accessibility.py         54      3     26      2    94%   67, 90->93, 98-99
+src/transit_audit/routing/bounds.py               182      4     60      5    96%   104->102, 167-176, 188, 361, 374->376, 432->415
+src/transit_audit/routing/index.py                 70      5     22      4    90%   55, 94, 100-101, 113
+src/transit_audit/routing/models.py                55      0      0      0   100%
+src/transit_audit/routing/policy.py                21      0      8      0   100%
+src/transit_audit/routing/reachability.py          63      1     40      3    96%   32->78, 71, 72->69
+src/transit_audit/routing/sample.py                47      4     18      5    86%   17, 21->23, 35, 53->55, 72-73
+src/transit_audit/routing/uncertainty.py           25      1     12      2    92%   37->33, 40
+src/transit_audit/routing/walking.py               61      5     28      3    91%   31, 40, 44-45, 47
+src/transit_audit/security.py                      31      2     12      2    91%   21, 28
+src/transit_audit/validator/__init__.py             2      0      0      0   100%
+src/transit_audit/validator/mobilitydata.py        68      4     22      3    92%   40, 54, 72-73
+src/transit_audit/version.py                        1      0      0      0   100%
+-------------------------------------------------------------------------------------------
+TOTAL                                            1701     87    636    107    92%
+Coverage JSON written to file docs/repair_logs/coverage.json
+Required test coverage of 90% reached. Total coverage: 91.61%
+================= 136 passed, 1 deselected in 87.26s (0:01:27) =================
