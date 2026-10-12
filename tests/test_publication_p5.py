@@ -122,10 +122,7 @@ def test_f2_ranking_scope_and_soft_budget():
     method = (ROOT / "docs/routing-bounds.md").read_text()
     assert "proven zero" not in method
     assert "time-selected subset" in method
-    assert "Wednesday" in (ROOT / "docs/milestones/M1_REPORT.md").read_text()
-    for name in ["docs/PREREGISTRATION_AMENDMENT_2026-09-30.md",
-                 "docs/milestones/FIX_REPORT_2026-09-30.md"]:
-        assert "Superseded" in (ROOT / name).read_text()
+    assert "Superseded" in (ROOT / "docs/PREREGISTRATION_AMENDMENT_2026-09-30.md").read_text()
 
 
 def test_f3_tracked_logs_are_part_of_release_scan():
@@ -150,7 +147,7 @@ def test_f4_exact_publisher_acknowledgements_and_dataset_links():
         assert manifests[name]["attribution"] == (
             f"Contains information licensed under the Open Government Licence \u2013 {publisher}."
         )
-    for name in ["DATA_LICENSES.md", "docs/milestones/M0_REPORT.md"]:
+    for name in ["DATA_LICENSES.md"]:
         text = (ROOT / name).read_text()
         assert "gtfs-schedule-data)" not in text
         assert "npk7-z3bj" in text

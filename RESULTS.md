@@ -5,6 +5,8 @@ Hardware/platform record: Darwin 27.0.0 (arm64).
 
 Preregistration SHA-256 (phase 2 prefix): `b9b793b753bffcf761232632f85a910ee2af444a8db6018aaf9ffc1dc262bde2`.
 
+Conditions: schedule-based reachability on the retained GTFS snapshots (service dates: ttc 2026-10-07, calgary 2026-09-30, edmonton 2026-09-30); departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Counts are origin-destination pairs reachable under each policy. Timetable data only; not checked against real trips.
+
 | Feed | Mean width | Nominal 95% crossed interval | n | Optimistic | Pessimistic | Schedule-only |
 |------|-----------:|:----------------------------|--:|-----------:|------------:|--------------:|
 | ttc | 0.00000 | [0.00000, 0.00000] | 800 | 50 | 50 | 330 |
@@ -22,6 +24,8 @@ Source: [ttc feed](https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/b811e
 ### Verification ranking
 
 Ranking not run (not_primary_feed).
+
+Conditions: service date 2026-10-07; base settings: departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Widths are mean interval widths over the sampled pairs.
 
 | Field | Best-case reduction | Accessible outcome width | Inaccessible outcome width | Affected pairs |
 |-------|--------------------:|-------------------------:|---------------------------:|---------------:|
@@ -41,6 +45,8 @@ Source: [calgary feed](https://data.calgary.ca/download/npk7-z3bj/application/zi
 ### Verification ranking
 
 Exact single-field counterfactual recomputation on a time-selected subset of unknown fields, using the sampled OD pairs. Ranking is only among evaluated fields; skipped impact is unknown. Both outcomes share the same walking graph. Best-case reduction is the larger outcome reduction, not expected value. Budgets are soft candidate-start budgets: a running candidate can exceed them.
+
+Conditions: service date 2026-09-30; base settings: departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Widths are mean interval widths over the sampled pairs.
 
 | Field | Best-case reduction | Accessible outcome width | Inaccessible outcome width | Affected pairs |
 |-------|--------------------:|-------------------------:|---------------------------:|---------------:|
@@ -67,6 +73,8 @@ Validator status: completed; notice categories 13; error categories 2.
 
 ### Transfer Sensitivity
 
+Conditions: service date 2026-09-30; base settings: departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Each row changes only the minimum transfer time and the maximum trip time; every other setting stays at its base value.
+
 | Settings | Mean width | Optimistic | Schedule-only |
 |----------|-----------:|-----------:|--------------:|
 | {'min_transfer_minutes': 3, 'max_travel_minutes': 45} | 0.14625 | 117 | 117 |
@@ -80,6 +88,8 @@ Validator status: completed; notice categories 13; error categories 2.
 | {'min_transfer_minutes': 10, 'max_travel_minutes': 90} | 0.52125 | 417 | 417 |
 
 ### Walk Sensitivity
+
+Conditions: service date 2026-09-30; base settings: departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Each row changes only the walking speed and the walking radius; every other setting stays at its base value.
 
 | Settings | Mean width | Optimistic | Schedule-only |
 |----------|-----------:|-----------:|--------------:|
@@ -102,6 +112,8 @@ Source: [edmonton feed](https://gtfs.edmonton.ca/TMGTFSRealTimeWebService/GTFS/g
 ### Verification ranking
 
 Exact single-field counterfactual recomputation on a time-selected subset of unknown fields, using the sampled OD pairs. Ranking is only among evaluated fields; skipped impact is unknown. Both outcomes share the same walking graph. Best-case reduction is the larger outcome reduction, not expected value. Budgets are soft candidate-start budgets: a running candidate can exceed them.
+
+Conditions: service date 2026-09-30; base settings: departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Widths are mean interval widths over the sampled pairs.
 
 | Field | Best-case reduction | Accessible outcome width | Inaccessible outcome width | Affected pairs |
 |-------|--------------------:|-------------------------:|---------------------------:|---------------:|

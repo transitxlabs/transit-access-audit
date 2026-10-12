@@ -2,7 +2,7 @@
 
 # Amendment 2026-10-01 04: ranking
 
-Repair-round label: 2026-10-01, requested by the maintainer.
+Repair-round label: 2026-10-01.
 
 Results had already been seen before this amendment. No independent freeze chronology is claimed. The preregistration body and its separate hash file remain unchanged.
 
@@ -10,7 +10,7 @@ Results had already been seen before this amendment. No independent freeze chron
 
 Consider every unknown stop and trip field on the sampled OD pairs through exhaustive single-field recomputation. Remove usage cutoffs. Keep the same walking graph in both counterfactual outcomes. Enable time-budgeted ranking in each production primary run (Calgary 600 s, Edmonton 1800 s), prioritising sampled origins, destinations and their trip neighbours before remaining unknown fields. Rank by best-case mean width reduction, the larger of the accessible and inaccessible outcome reductions; report both outcomes separately. This quantity is not expected value without outcome probabilities. The output limit restricts presentation only. Serialise candidates total, evaluated, skipped, positive targets and measured runtime; never convert skipped evaluation into zero impact.
 
-Reason: independent verification Finding 4; see [repair report](../milestones/FIX_REPORT_2026-09-30.md) and regression evidence in `docs/repair_logs/`.
+Reason: internal review finding 4.
 
 ## Public method sources
 

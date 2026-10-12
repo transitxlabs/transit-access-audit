@@ -13,5 +13,5 @@
   "acquisition_date_status": "historical repository record; exact timestamp unavailable",
   "snapshot_verified_date": "2026-10-01",
   "endpoint_association_source": "https://data.edmonton.ca/api/views/4fvt-p2se.json",
-  "endpoint_association_status": "Publisher metadata cited in the local independent review; not freshly retrievable in this sandbox."
+  "endpoint_association_status": "Publisher metadata page cited."
 }

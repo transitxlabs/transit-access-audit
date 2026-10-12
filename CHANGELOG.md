@@ -22,7 +22,7 @@ Phase 2 correctness and evaluation fixes.
 
 ## 0.2.0 - 2026-09-30
 
-Flagship routing bounds release.
+Routing bounds release.
 
 ### Routing bounds
 

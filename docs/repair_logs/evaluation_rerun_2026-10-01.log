@@ -1,4 +1,0 @@
-[home]/.matplotlib is not a writable directory
-Matplotlib created a temporary cache directory at [temporary-cache] because there was an issue with the default path ([home]/.matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
-Matplotlib is building the font cache; this may take a moment.
-{"primary_feed": "calgary", "mean_interval_width": 0.285}

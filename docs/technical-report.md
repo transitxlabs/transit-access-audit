@@ -105,6 +105,8 @@ Place `gtfs-validator-6.0.0-cli.jar` in `vendor/` for validator baselines.
 4. Oh, J., et al. (2017). Estimating and Enhancing Public Transit Accessibility for People with Mobility Limitations. U.S. DOT. https://rosap.ntl.bts.gov/view/dot/34806/dot_34806_DS1.pdf
 
 <!-- GENERATED RESULTS START -->
+Conditions: schedule-based reachability on the retained GTFS snapshots (service dates: ttc 2026-10-07, calgary 2026-09-30, edmonton 2026-09-30); departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Counts are origin-destination pairs reachable under each policy. Timetable data only; not checked against real trips.
+
 | Feed | Mean width | Nominal 95% crossed interval | n | Optimistic | Pessimistic | Schedule-only |
 |------|-----------:|:----------------------------|--:|-----------:|------------:|--------------:|
 | ttc | 0.00000 | [0.00000, 0.00000] | 800 | 50 | 50 | 330 |

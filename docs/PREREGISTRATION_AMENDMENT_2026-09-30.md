@@ -12,7 +12,7 @@ Results for phase 2 had already been computed before this amendment. The frozen 
 | OD sample size | 800 pairs implied | Confirmed 800 pairs (20 origins x 40 destinations). Phase 2 report previously noted a 400-pair exploratory run; that run is historical only. |
 | Uncertainty | Pairwise bootstrap over 800 OD rows | Crossed origin/destination bootstrap preserving unknown/known origin strata (see `transit_audit.routing.uncertainty`). |
 | Verification ranking | Exact ranking language | Batch evaluation keeps `rank_verification=False` on large feeds; exhaustive ranking remains on fixtures and in library API. |
-| Hypotheses H1-H3 | Stated before repair | Withdrawn pending regeneration after routing repairs documented in `docs/milestones/FIX_REPORT_2026-09-30.md`. |
+| Hypotheses H1-H3 | Stated before repair | Withdrawn pending regeneration after the routing repairs recorded in amendments 01 to 05 in `docs/amendments/`. |
 
 ## Chronology note
 

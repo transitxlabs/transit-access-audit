@@ -9,6 +9,45 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _settings_text(config: dict[str, Any]) -> str:
+    """Base routing settings in plain words; empty when the stored record lacks them."""
+    keys = ("departure_time", "max_travel_minutes", "max_transfers", "min_transfer_minutes",
+            "walk_speed_mps", "walk_radius_m", "origin_count", "destination_count", "random_seed")
+    if not all(key in config for key in keys):
+        return ""
+    return (
+        f"departures at {config['departure_time']}, trips of at most "
+        f"{config['max_travel_minutes']} minutes with at most {config['max_transfers']} transfers "
+        f"({config['min_transfer_minutes']}-minute minimum), walking at {config['walk_speed_mps']} m/s "
+        f"within {config['walk_radius_m']:.0f} m, {config['origin_count']} origins by "
+        f"{config['destination_count']} destinations (seed {config['random_seed']})"
+    )
+
+
+def _summary_conditions(payload: dict[str, Any]) -> str:
+    feeds = payload["feeds"]
+    dates = ", ".join(f"{name} {feed.get('service_date', 'unknown')}" for name, feed in feeds.items())
+    configs = [{k: v for k, v in feed.get("config", {}).items() if k != "service_date"}
+               for feed in feeds.values()]
+    shared = configs[0] if configs and all(c == configs[0] for c in configs) else {}
+    settings = _settings_text(shared)
+    settings_part = f"; {settings}" if settings else ""
+    return (
+        "Conditions: schedule-based reachability on the retained GTFS snapshots "
+        f"(service dates: {dates}){settings_part}. Counts are origin-destination pairs reachable "
+        "under each policy. Timetable data only; not checked against real trips."
+    )
+
+
+def _feed_conditions(feed: dict[str, Any], varied: str = "") -> str:
+    settings = _settings_text(feed.get("config", {}))
+    base = f"service date {feed.get('service_date', 'unknown')}"
+    if settings:
+        base += f"; base settings: {settings}"
+    note = f" Each row changes only {varied}; every other setting stays at its base value." if varied else ""
+    return f"Conditions: {base}.{note}"
+
+
 def _ranking_section(feed: dict[str, Any]) -> list[str]:
     metadata = feed["metadata"]
     snapshot = feed["feed_snapshot"]
@@ -25,6 +64,7 @@ def _ranking_section(feed: dict[str, Any]) -> list[str]:
     else:
         lines += [f"Ranking not run ({metadata.get('ranking_skipped_reason', 'disabled')}).", ""]
     lines += [
+        _feed_conditions(feed) + " Widths are mean interval widths over the sampled pairs.", "",
         "| Field | Best-case reduction | Accessible outcome width | Inaccessible outcome width | Affected pairs |",
         "|-------|--------------------:|-------------------------:|---------------------------:|---------------:|",
     ]
@@ -54,6 +94,7 @@ def _ranking_section(feed: dict[str, Any]) -> list[str]:
 
 def _summary_table(payload: dict[str, Any]) -> list[str]:
     lines = [
+        _summary_conditions(payload), "",
         "| Feed | Mean width | Nominal 95% crossed interval | n | Optimistic | Pessimistic | Schedule-only |",
         "|------|-----------:|:----------------------------|--:|-----------:|------------:|--------------:|",
     ]
@@ -112,7 +153,10 @@ def _body(payload: dict[str, Any], json_path: Path, destination: Path) -> str:
         for key in ["transfer_sensitivity", "walk_sensitivity"]:
             if not feed[key]:
                 continue
+            varied = {"transfer_sensitivity": "the minimum transfer time and the maximum trip time",
+                      "walk_sensitivity": "the walking speed and the walking radius"}[key]
             text += [f"### {key.replace('_', ' ').title()}", "",
+                     _feed_conditions(feed, varied), "",
                      "| Settings | Mean width | Optimistic | Schedule-only |",
                      "|----------|-----------:|-----------:|--------------:|"]
             for row in feed[key]:

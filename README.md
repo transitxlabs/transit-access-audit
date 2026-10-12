@@ -2,9 +2,11 @@
 
 Open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds and quantifying how unknown wheelchair-accessibility metadata affects schedule-based reachability bounds.
 
-## What is new
+**Status:** research prototype. It has not been checked against real trips and no transit agency uses it. Results describe timetable data under stated assumptions. They do not show whether a stop or trip is accessible in practice.
 
-| Compared to | They provide | This project adds |
+## How it relates to other tools
+
+| Compared to | They provide | This project offers |
 |-------------|--------------|-------------------|
 | [MobilityData GTFS Validator](https://github.com/MobilityData/gtfs-validator) | Schema and best-practice validation | Optimistic/pessimistic routing bounds and verification ranking ([RESULTS.md](RESULTS.md)) |
 | [OpenTripPlanner accessibility](https://docs.opentripplanner.org/en/dev-2.x/Accessibility/) | Single-scenario unknown-cost routing | Explicit bound pair plus interval width metrics on a sampled OD set |
@@ -35,7 +37,7 @@ transit-audit bounds tests/fixtures/bounds_route.zip \
   --service-date 2024-06-03 --departure-time 07:00:00 --output bounds-results.json
 ```
 
-## Routing bounds (flagship)
+## Routing bounds
 
 Unknown GTFS wheelchair fields should not silently become accessible or inaccessible. The `bounds` command computes:
 
@@ -88,6 +90,8 @@ python -m build
 Apache-2.0. See [LICENSE](LICENSE). Demonstration data licences in [DATA_LICENSES.md](DATA_LICENSES.md).
 
 <!-- GENERATED RESULTS START -->
+Conditions: schedule-based reachability on the retained GTFS snapshots (service dates: ttc 2026-10-07, calgary 2026-09-30, edmonton 2026-09-30); departures at 08:30:00, trips of at most 60 minutes with at most 2 transfers (5-minute minimum), walking at 1.4 m/s within 300 m, 20 origins by 40 destinations (seed 42). Counts are origin-destination pairs reachable under each policy. Timetable data only; not checked against real trips.
+
 | Feed | Mean width | Nominal 95% crossed interval | n | Optimistic | Pessimistic | Schedule-only |
 |------|-----------:|:----------------------------|--:|-----------:|------------:|--------------:|
 | ttc | 0.00000 | [0.00000, 0.00000] | 800 | 50 | 50 | 330 |
