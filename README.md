@@ -1,8 +1,8 @@
 # transit-access-audit
 
-Open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds and quantifying how unknown wheelchair-accessibility metadata affects schedule-based reachability bounds.
+How much does missing wheelchair-accessibility data change where a rider can get to by transit? For 800 sampled origin and destination pairs (08:30 departures, trips of up to 60 minutes with up to 2 transfers), Calgary's feed, with 6,220 stops and 62,862 trips whose wheelchair fields are unknown, gives 228 reachable pairs if every unknown counts as accessible and none if none does. Edmonton's gives 190 against 81. Toronto's TTC feed has no unknown fields, so both policies give 50. The full corrected results are in [RESULTS.md](RESULTS.md).
 
-**Status:** research prototype. It has not been checked against real trips and no transit agency uses it. Results describe timetable data under stated assumptions. They do not show whether a stop or trip is accessible in practice.
+transit-access-audit is an open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds and measuring these bounds. It is a research prototype: it has not been checked against real trips, no transit agency uses it, and its results describe timetable data under stated assumptions, not whether a stop or trip is accessible in practice.
 
 ## How it relates to other tools
 
@@ -16,9 +16,7 @@ Open-source toolkit by **TransitX Labs Inc.** for auditing Canadian GTFS feeds a
 
 ## Open by design
 
-**Materials for inspection and reuse.** Project source, method documentation and synthetic examples are supplied under [Apache-2.0](LICENSE). Retained public inputs use the publisher terms recorded in [DATA_LICENSES.md](DATA_LICENSES.md). The results include the parameters, sampled pairs and recorded provenance needed to inspect this implementation.
-
-**Project code and licensed inputs.** Project code and synthetic fixtures are provided under [Apache-2.0](LICENSE). Retained public GTFS snapshots remain the publishers' information and use their respective [licences and acknowledgements](DATA_LICENSES.md). The demo uses synthetic inputs; source and licence records accompany the [retained evaluation snapshots](data/snapshots/README.md). No publisher endorsement is implied.
+**Open for inspection and reuse.** The code, method documentation and synthetic examples are under [Apache-2.0](LICENSE), and the results carry the parameters, sampled pairs and provenance needed to check them. The retained public GTFS snapshots remain their publishers' information under the terms in [DATA_LICENSES.md](DATA_LICENSES.md), with source records beside the [snapshots](data/snapshots/README.md); no publisher endorsement is implied.
 
 ## Quick start
 
